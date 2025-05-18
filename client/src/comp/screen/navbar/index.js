@@ -8,6 +8,7 @@ import {
 	IconButton,
 	Icon,
 	Tooltip,
+	Button,
 } from "@chakra-ui/react";
 
 import {
@@ -24,6 +25,11 @@ import { BsFillInfoCircleFill } from "react-icons/bs";
 import { connect } from "react-redux";
 
 import SettingsView from "../settings";
+import LoginModal from "../../../components/auth/LoginModal";
+import RegisterModal from "../../../components/auth/RegisterModal";
+
+import { useAuth } from "../../../context/AuthContext";
+import { logout } from "../../../services/authService";
 
 import Actions from "../../redux/action";
 import Constants from "../../utils/Constants";
@@ -48,6 +54,19 @@ const NavBarView = (props) => {
 	const btnRef = useRef();
 	const settingsRef = createRef();
 
+	const { user, logout: authLogout } = useAuth() || { user: null, logout: () => {} };
+	const [isLoginOpen, setIsLoginOpen] = useState(false);
+	const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+	const handleLogout = async () => {
+		try {
+			await logout(); // Call the API logout
+			authLogout(); // Update the auth context
+		} catch (error) {
+			console.error("Logout failed:", error);
+		}
+	};
+
 	/*  Life-cycles Methods */
 
 	useEffect(() => {
@@ -64,7 +83,6 @@ const NavBarView = (props) => {
 	/*  Public Interface Methods */
 
 	/*  UI Events Methods   */
-
 
 	const onPressSettings = () => {
 		settingsRef.current && settingsRef.current.openModal();
@@ -118,6 +136,34 @@ const NavBarView = (props) => {
 						</Flex>
 					</Flex>
 					<Flex>
+						{user ? (
+							<>
+								<Button
+									variant="ghost"
+									onClick={handleLogout}
+									mr={2}
+								>
+									Logout
+								</Button>
+							</>
+						) : (
+							<>
+								<Button
+									variant="ghost"
+									onClick={() => setIsLoginOpen(true)}
+									mr={2}
+								>
+									Login
+								</Button>
+								<Button
+									variant="ghost"
+									onClick={() => setIsRegisterOpen(true)}
+									mr={2}
+								>
+									Register
+								</Button>
+							</>
+						)}
 						<Tooltip label="Change Theme">
 							<IconButton
 								variant="link"
@@ -142,8 +188,15 @@ const NavBarView = (props) => {
 						</Tooltip>
 					</Flex>
 				</Flex>
+				<LoginModal
+					isOpen={isLoginOpen}
+					onClose={() => setIsLoginOpen(false)}
+				/>
+				<RegisterModal
+					isOpen={isRegisterOpen}
+					onClose={() => setIsRegisterOpen(false)}
+				/>
 				<SettingsView ref={settingsRef} />
-				
 			</>
 		);
 	};
