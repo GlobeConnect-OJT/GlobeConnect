@@ -1,6 +1,5 @@
 // Global error handling middleware
 const errorHandler = (err, req, res, next) => {
-  // Log to console for dev
   console.error(err);
 
   // Mongoose duplicate key
