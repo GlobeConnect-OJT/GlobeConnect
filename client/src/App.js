@@ -2,7 +2,7 @@ import "./App.css";
 
 import React, { useEffect, useState, createRef } from "react";
 
-import { Text, Flex, CircularProgress, useColorMode } from "@chakra-ui/react";
+import { Text, Flex, CircularProgress, useColorMode, ChakraProvider } from "@chakra-ui/react";
 
 import MasterContainer from "./comp/screen/mastercontainer";
 import Constants from "./comp/utils";
@@ -12,6 +12,7 @@ import { connect } from "react-redux";
 
 import lodash from "lodash";
 import AppManager from "./comp/utils/AppManager";
+import { AuthProvider } from './context/AuthContext';
 
 const App = (props) => {
 	/*  Life-cycles Methods */
@@ -94,10 +95,14 @@ const App = (props) => {
 	};
 
 	return (
-		<>
-			<MasterContainer />
-			{isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
-		</>
+		<AuthProvider>
+			<ChakraProvider>
+				<>
+					<MasterContainer />
+					{isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
+				</>
+			</ChakraProvider>
+		</AuthProvider>
 	);
 };
 
