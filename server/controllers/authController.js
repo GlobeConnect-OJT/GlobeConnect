@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 
 // Generate JWT token
@@ -27,11 +28,14 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    // Create user
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Create user with hashed password
     const user = await User.create({
       username,
       email,
-      password,
+      password: hashedPassword,
     });
 
     // Generate token
@@ -70,7 +74,17 @@ exports.login = async (req, res, next) => {
     // Check if user exists && password is correct
     const user = await User.findOne({ email }).select("+password");
 
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Incorrect email or password",
+      });
+    }
+
+    // Compare password
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordCorrect) {
       return res.status(401).json({
         status: "fail",
         message: "Incorrect email or password",
@@ -99,8 +113,6 @@ exports.login = async (req, res, next) => {
 // @route   POST /api/auth/logout
 // @access  Private
 exports.logout = async (req, res) => {
-  // Since JWT is stateless, actual logout happens on client side
-  // by removing the token. This endpoint exists for API completeness.
   res.status(200).json({
     status: "success",
     message: "Logged out successfully",
