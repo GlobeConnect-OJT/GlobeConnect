@@ -2,7 +2,7 @@ import "./App.css";
 
 import React, { useEffect, useState, createRef } from "react";
 
-import { Text, Flex, CircularProgress, useColorMode, ChakraProvider } from "@chakra-ui/react";
+import { Text, Flex, CircularProgress, useColorMode, ChakraProvider, Box } from "@chakra-ui/react";
 
 import MasterContainer from "./comp/screen/mastercontainer";
 import Constants from "./comp/utils";
@@ -13,6 +13,8 @@ import { connect } from "react-redux";
 import lodash from "lodash";
 import AppManager from "./comp/utils/AppManager";
 import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import LocationDetailsPage from './components/pages/LocationDetailsPage';
 
 const App = (props) => {
 	/*  Life-cycles Methods */
@@ -95,14 +97,19 @@ const App = (props) => {
 	};
 
 	return (
-		<AuthProvider>
-			<ChakraProvider>
-				<>
-					<MasterContainer />
-					{isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
-				</>
-			</ChakraProvider>
-		</AuthProvider>
+		<BrowserRouter>
+			<AuthProvider>
+				<ChakraProvider>
+					<Box width="100%" height="100%">
+						<Routes>
+							<Route path="/" element={<MasterContainer />} />
+							<Route path="/location/:lat/:lng" element={<LocationDetailsPage />} />
+						</Routes>
+						{isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
+					</Box>
+				</ChakraProvider>
+			</AuthProvider>
+		</BrowserRouter>
 	);
 };
 

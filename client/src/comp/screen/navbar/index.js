@@ -16,6 +16,7 @@ import {
 	MoonIcon,
 	SunIcon,
 	SettingsIcon,
+	AddIcon,
 } from "@chakra-ui/icons";
 
 import { FaGlobeAfrica } from "react-icons/fa";
@@ -27,9 +28,12 @@ import { connect } from "react-redux";
 import SettingsView from "../settings";
 import LoginModal from "../../../components/auth/LoginModal";
 import RegisterModal from "../../../components/auth/RegisterModal";
+import CreatePostModal from "../../screen/post/CreatePostModal";
 
 import { useAuth } from "../../../context/AuthContext";
 import { logout } from "../../../services/authService";
+
+import { useNavigate } from "react-router-dom";
 
 import Actions from "../../redux/action";
 import Constants from "../../utils/Constants";
@@ -57,6 +61,9 @@ const NavBarView = (props) => {
 	const { user, logout: authLogout } = useAuth() || { user: null, logout: () => {} };
 	const [isLoginOpen, setIsLoginOpen] = useState(false);
 	const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+	const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
+
+	const navigate = useNavigate();
 
 	const handleLogout = async () => {
 		try {
@@ -65,6 +72,10 @@ const NavBarView = (props) => {
 		} catch (error) {
 			console.error("Logout failed:", error);
 		}
+	};
+
+	const handleTitleClick = () => {
+		navigate('/');
 	};
 
 	/*  Life-cycles Methods */
@@ -86,6 +97,10 @@ const NavBarView = (props) => {
 
 	const onPressSettings = () => {
 		settingsRef.current && settingsRef.current.openModal();
+	};
+
+	const onPressAddPost = () => {
+		setIsCreatePostOpen(true);
 	};
 
 	/*  Server Request Methods  */
@@ -112,6 +127,8 @@ const NavBarView = (props) => {
 						justifyContent="flex-start"
 						alignItems="center"
 						paddingY={1}
+						cursor="pointer"
+						onClick={handleTitleClick}
 					>
 						<Icon
 							alignSelf={"center"}
@@ -144,6 +161,15 @@ const NavBarView = (props) => {
 									mr={2}
 								>
 									Logout
+								</Button>
+								<Button
+									leftIcon={<AddIcon />}
+									variant="solid"
+									colorScheme="blue"
+									onClick={onPressAddPost}
+									mr={2}
+								>
+									Add Post
 								</Button>
 							</>
 						) : (
@@ -195,6 +221,10 @@ const NavBarView = (props) => {
 				<RegisterModal
 					isOpen={isRegisterOpen}
 					onClose={() => setIsRegisterOpen(false)}
+				/>
+				<CreatePostModal
+					isOpen={isCreatePostOpen}
+					onClose={() => setIsCreatePostOpen(false)}
 				/>
 				<SettingsView ref={settingsRef} />
 			</>

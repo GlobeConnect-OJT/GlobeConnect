@@ -24,10 +24,14 @@ import {
 	stroke,
 } from "./globeutils";
 
+import { useNavigate } from 'react-router-dom';
+
 const { MasterDrawerMenuType } = Constants;
 
 const MasterGlobeView = (props) => {
 	const { userConfig, userPref } = props;
+
+	const navigate = useNavigate();
 
 	const [state, setState] = useState({
 		selectedMenuType:
@@ -1458,6 +1462,9 @@ const MasterGlobeView = (props) => {
 			latitude: `${pos[1].toFixed(8)}`,
 			longitude: `${pos[0].toFixed(8)}`,
 		};
+
+		// Add this navigation
+		navigate(`/location/${selectedPlaceCoordinate.latitude}/${selectedPlaceCoordinate.longitude}`);
 
 		await props.setUserConfig({
 			...userConfig,
