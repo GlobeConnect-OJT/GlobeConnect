@@ -146,8 +146,6 @@ const PlaceInfoView = (props) => {
 		defaultIndex: [0],
 		favPlaceArray: userPref?.favPlaceArray ?? [],
 		favPlaceDisplayArray: [],
-		locationInfo: null,
-		isLoadingLocation: false,
 	});
 
 	const updateState = (data) =>
@@ -158,28 +156,28 @@ const PlaceInfoView = (props) => {
 		longitude: 0.0,
 	});
 
+	const [locationInfo, setLocationInfo] = useState(null);
+	const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
 	const updateCoordinate = async (data) => {
 		setCoordinate((preState) => ({ ...preState, ...data }));
 		// Update parent component's state to ensure synchronization
 		props.onCoordinateChange && props.onCoordinateChange(data);
-		
+
 		// Get location details from coordinates
 		if (data.latitude && data.longitude) {
+			setIsLoadingLocation(true);
 			try {
 				const locationDetails = await getLocationFromCoordinates({
 					latitude: data.latitude,
-					longitude: data.longitude
+					longitude: data.longitude,
 				});
-				if (locationDetails) {
-					setLocationInfo({
-						city: locationDetails.city || 'N/A',
-						state: locationDetails.state || 'N/A',
-						country: locationDetails.country || 'N/A',
-						displayName: locationDetails.displayName || ''
-					});
-				}
+				setLocationInfo(locationDetails);
 			} catch (error) {
-				console.error('Error fetching location details:', error);
+				console.error("Error fetching location details:", error);
+				setLocationInfo(null);
+			} finally {
+				setIsLoadingLocation(false);
 			}
 		}
 	};
@@ -215,10 +213,10 @@ const PlaceInfoView = (props) => {
 			const locationData = await getLocationFromCoordinates(coords);
 			updateState({
 				locationInfo: locationData,
-				isLoadingLocation: false
+				isLoadingLocation: false,
 			});
 		} catch (error) {
-			console.error('Error fetching location info:', error);
+			console.error("Error fetching location info:", error);
 			updateState({ isLoadingLocation: false });
 		}
 	};
@@ -951,10 +949,7 @@ const PlaceInfoView = (props) => {
 		const latLngValueSize = "x-small";
 
 		return (
-			<TableContainer
-				mt={2}
-				overflowX={"auto"}
-			>
+			<TableContainer mt={2} overflowX={"auto"}>
 				<Table size="sm">
 					<Thead>
 						<Tr>
@@ -969,7 +964,6 @@ const PlaceInfoView = (props) => {
 							<Td textAlign="left">
 								<Tooltip
 									hasArrow
-									// color='white'
 									placement="top"
 									label={"Decimal Degrees"}
 								>
@@ -985,14 +979,22 @@ const PlaceInfoView = (props) => {
 								fontSize={latLngValueSize}
 							>{`${coordinate?.longitude ?? 0}`}</Td>
 							<Td textAlign="center">
-								{state.isLoadingLocation ? (
+								{isLoadingLocation ? (
 									<Spinner size="sm" />
-								) : state.locationInfo ? (
+								) : locationInfo ? (
 									<Text fontSize="sm">
-										{state.locationInfo.city || state.locationInfo.state || state.locationInfo.country || 'Unknown location'}
+										{[
+											locationInfo.city,
+											locationInfo.state,
+											locationInfo.country,
+										]
+											.filter(Boolean)
+											.join(", ") || "Unknown location"}
 									</Text>
 								) : (
-									<Text fontSize="sm" color="gray.500">No location data</Text>
+									<Text fontSize="sm" color="gray.500">
+										Enter coordinates
+									</Text>
 								)}
 							</Td>
 						</Tr>
@@ -1000,7 +1002,6 @@ const PlaceInfoView = (props) => {
 							<Td textAlign="left">
 								<Tooltip
 									hasArrow
-									// color='white'
 									placement="top"
 									label={"Degrees, Minutes & Seconds"}
 								>
@@ -1024,7 +1025,6 @@ const PlaceInfoView = (props) => {
 							<Td textAlign="left">
 								<Tooltip
 									hasArrow
-									// color='white'
 									placement="top"
 									label={"Degrees & Decimal Minutes"}
 								>
@@ -1238,7 +1238,7 @@ const PlaceInfoView = (props) => {
 							textAlign={"right"}
 							colorScheme="linkedin"
 						>
-							{`${propertyItem?.value}`.trim()}
+						{`${propertyItem?.value}`.trim()}
 						</Code>
 					)}
 				</Flex>
