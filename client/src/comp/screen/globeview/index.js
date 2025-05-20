@@ -54,17 +54,17 @@ const MasterGlobeView = (props) => {
 	const suncalcOptionObj = useRef({
 		tickDur: 400,
 		shadowOpacity: 0.16,
-		lightsOpacity: 0.5,
-		sunOpacity: 0.2,
+		lightsOpacity: 0.7,
+		sunOpacity: 0.3,
 		precisionLat: 1, // How many latitudinal degrees per point when checking solar position.
 		precisionLng: 10, // How may longitudial degrees per sunrise / sunset path point.
 		mapWidth: 1100,
 		mapHeight: 550,
 		refreshMap: true, // Periodically redraw map to keep current time
 		refreshMapInterval: 60000, // Update interval
-		bgColorLeft: "#42448A",
-		bgColorRight: "#376281",
-		lightsColor: "#FFBEA0",
+		bgColorLeft: "#0000ff", // Vibrant blue for gradient left side
+		bgColorRight: "#ff00aa", // Vibrant pink for gradient right side
+		lightsColor: "#ffff00", // Bright yellow for city lights
 	});
 
 	const updateGlobeData = (data) =>
@@ -200,13 +200,13 @@ const MasterGlobeView = (props) => {
 			selectedMarkerID: null,
 			transform: d3.zoomIdentity,
 
-			colorWater: "#74ccf4aa",
-			colorLand: "#222",
-			colorGraticule: "#333",
-			colorCountry: "#fff3",
-			colorPolygon: "#f003",
-			colorBoundaries: "#ffffff55",
-			colorLabels: "#ffffff",
+			colorWater: "#359faf", // Deep blue base for the water
+			colorLand: "#006400", // Vibrant magenta for land masses
+			colorGraticule: "#ffff00", // Bright yellow for grid lines
+			colorCountry: "#00ffff88", // Cyan with transparency for country outlines
+			colorPolygon: "#ff880088", // Orange with transparency for polygons
+			colorBoundaries: "#00000088", // Black with transparency for boundaries
+			colorLabels: "#ffffff", // White for labels
 
 			selectedCounytryID: null,
 			userCountryID: null,
@@ -958,7 +958,7 @@ const MasterGlobeView = (props) => {
 				path,
 			},
 			countries,
-			"#fff6"
+			"#00000088"
 		);
 
 		if (enableDayNightMode) {
