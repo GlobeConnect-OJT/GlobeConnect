@@ -679,12 +679,14 @@ const SearchPlaceView = (props) => {
 			<Flex
 				flex={1}
 				direction={"column"}
+				height="100vh"
 				visibility={state?.isAppLoaded ? "visible" : "hidden"}
 			>
 				<NavBarView />
 				<Flex
 					flex={1}
 					flexDirection={"row"}
+					overflow="hidden"
 				>
 					<Flex
 						flex={1}
