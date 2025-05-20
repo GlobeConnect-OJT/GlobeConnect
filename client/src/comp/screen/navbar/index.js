@@ -33,6 +33,8 @@ import CreatePostModal from "../../screen/post/CreatePostModal";
 import { useAuth } from "../../../context/AuthContext";
 import { logout } from "../../../services/authService";
 
+import { useNavigate } from "react-router-dom";
+
 import Actions from "../../redux/action";
 import Constants from "../../utils/Constants";
 import AppManager from "../../utils/AppManager";
@@ -61,6 +63,8 @@ const NavBarView = (props) => {
 	const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 	const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
+	const navigate = useNavigate();
+
 	const handleLogout = async () => {
 		try {
 			await logout(); // Call the API logout
@@ -68,6 +72,10 @@ const NavBarView = (props) => {
 		} catch (error) {
 			console.error("Logout failed:", error);
 		}
+	};
+
+	const handleTitleClick = () => {
+		navigate('/');
 	};
 
 	/*  Life-cycles Methods */
@@ -119,6 +127,8 @@ const NavBarView = (props) => {
 						justifyContent="flex-start"
 						alignItems="center"
 						paddingY={1}
+						cursor="pointer"
+						onClick={handleTitleClick}
 					>
 						<Icon
 							alignSelf={"center"}
