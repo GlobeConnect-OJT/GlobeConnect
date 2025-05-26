@@ -40,14 +40,15 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
 
   const { user } = useAuth() || { user: { username: "guest" } };
-  
+
   const bgColor = useColorModeValue("white", "#1A202C");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const inputBgColor = useColorModeValue("white", "#2D3748");
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
-    setFiles([...files, ...selectedFiles]);
+    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+    e.target.value = null;
   };
 
   const removeFile = (index) => {
@@ -62,7 +63,30 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   };
 
   const handleSubmit = async () => {
-    if (!location) {
+   
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please add a title to your post",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!content.trim()) {
+      toast({
+        title: "Content required",
+        description: "Please add some content to your post",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!location.trim()) {
       toast({
         title: "Location required",
         description: "Please add a location to your post",
@@ -75,8 +99,58 @@ const CreatePostModal = ({ isOpen, onClose }) => {
 
     try {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const formData = new FormData();
       
+      formData.append("title", title.trim());
+      formData.append("description", content.trim());
+      formData.append("stateName", location.trim()); 
+      
+      files.forEach((file) => {
+        formData.append("images", file);
+      });
+
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        throw new Error("Authentication token not found. Please log in again.");
+      }
+
+      console.log("Submitting post with data:", {
+        title: title.trim(),
+        description: content.trim(),
+        stateName: location.trim(),
+        fileCount: files.length
+      });
+
+      const res = await fetch("http://localhost:5000/api/posts", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+          // Don't set Content-Type for FormData
+        },
+        body: formData
+      });
+
+      const responseText = await res.text();
+      
+      if (!res.ok) {
+        let errorMessage = "Failed to create post";
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = responseText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        responseData = {};
+      }
+
       toast({
         title: "Post created.",
         description: "Your post has been created successfully.",
@@ -84,12 +158,19 @@ const CreatePostModal = ({ isOpen, onClose }) => {
         duration: 5000,
         isClosable: true,
       });
+
+      // Reset form
       setFiles([]);
       setTitle("");
       setContent("");
       setLocation("");
+      setShowSidebar(false);
+      setCharCount(0);
+      
       onClose();
+      
     } catch (error) {
+      console.error("Error creating post:", error);
       toast({
         title: "Error creating post.",
         description: error.message || "An error occurred while creating your post.",
@@ -126,7 +207,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             colorScheme="blue" 
             size="sm" 
             mt={4} 
-            onClick={() => fileInputRef.current.click()}
+            onClick={() => fileInputRef.current?.click()}
           >
             Select From Computer
           </Button>
@@ -185,7 +266,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
                   borderRadius="md"
                   fontSize="xs"
                   cursor="pointer"
-                  onClick={() => document.getElementById('tagPeopleOverlay').focus()}
+                  onClick={() => document.getElementById('tagPeopleOverlay')?.focus()}
                 >
                   Tag People
                 </Box>
@@ -200,7 +281,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             border="1px dashed" 
             borderColor={borderColor} 
             borderRadius="md"
-            onClick={() => fileInputRef.current.click()}
+            onClick={() => fileInputRef.current?.click()}
             cursor="pointer"
           >
             +
@@ -265,13 +346,14 @@ const CreatePostModal = ({ isOpen, onClose }) => {
       isCentered
     >
       <ModalOverlay />
-      <ModalContent bg={bgColor} maxH="90vh">
+      <ModalContent bg={bgColor} maxH="90vh" position="relative">
         <ModalHeader 
           borderBottom="1px solid" 
           borderColor={borderColor}
           display="flex" 
           alignItems="center"
           justifyContent="space-between"
+          pr={12} 
         >
           <Flex align="center">
             {showSidebar && (
@@ -295,7 +377,18 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             </Button>
           )}
         </ModalHeader>
-        <ModalCloseButton />
+        
+        <IconButton
+          icon={<CloseIcon />}
+          position="absolute"
+          top={4}
+          right={4}
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          aria-label="Close modal"
+          zIndex={1}
+        />
         
         <Flex direction="row" maxH="70vh">
           <ModalBody p={4} flex="1" overflowY="auto">
@@ -309,6 +402,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     mb={2}
+                    isRequired
                   />
                   <Textarea 
                     placeholder="What's on your mind?" 
@@ -369,7 +463,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
               colorScheme="blue" 
               onClick={handleSubmit} 
               isLoading={isLoading}
-              isDisabled={files.length === 0 || !location}
+              isDisabled={!location.trim() || !content.trim() || !title.trim()}
             >
               Post
             </Button>
