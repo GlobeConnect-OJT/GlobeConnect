@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
 	Box,
@@ -50,6 +51,8 @@ const SearchPlaceView = (props) => {
 		userPref,
 		menuType = MasterDrawerMenuType.Search,
 	} = props;
+
+	const navigate = useNavigate();
 
 	const [state, setState] = useState({
 		placeName: "",
@@ -489,6 +492,11 @@ const SearchPlaceView = (props) => {
 			placeItem: placeItem,
 			searchResultArray: [],
 		});
+
+		// Navigate to location details page
+		if (placeItem?.latitude && placeItem?.longitude) {
+			navigate(`/location/${placeItem.latitude}/${placeItem.longitude}`);
+		}
 	};
 
 	const onPressMakeFavItem = async (isFavPlace, favPlaceIndex, placeItem) => {
