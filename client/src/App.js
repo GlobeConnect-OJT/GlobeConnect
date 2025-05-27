@@ -93,7 +93,7 @@ const App = (props) => {
     <BrowserRouter>
       <AuthProvider>
         <ChakraProvider>
-          <Box width="100%" minHeight="100%" position="relative">
+          <Box width="100%" minHeight="100%" position="relative" bg="black">
             <Routes>
               <Route path="/" element={<MasterContainer />} />
               <Route

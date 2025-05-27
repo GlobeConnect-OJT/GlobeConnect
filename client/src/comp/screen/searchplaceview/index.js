@@ -10,6 +10,8 @@ import {
 	InputRightElement,
 	Icon,
 	Spacer,
+	useMediaQuery,
+	Stack,
 } from "@chakra-ui/react";
 
 import { CloseIcon, Search2Icon } from "@chakra-ui/icons";
@@ -60,6 +62,9 @@ const SearchPlaceView = (props) => {
 	});
 
 	const [searchKeyword, setSearchKeyword] = useState("");
+	
+	// Check if the screen is mobile size
+	const [isMobile] = useMediaQuery("(max-width: 768px)");
 
 	const updateState = (data) =>
 		setState((preState) => ({ ...preState, ...data }));
@@ -683,44 +688,79 @@ const SearchPlaceView = (props) => {
 				visibility={state?.isAppLoaded ? "visible" : "hidden"}
 			>
 				<NavBarView />
-				<Flex
-					flex={1}
-					flexDirection={"row"}
-					overflow="hidden"
-				>
+				{isMobile ? (
+					// Mobile layout - only show search bar and globe view
 					<Flex
 						flex={1}
-						pointerEvents={"auto"}
-						pt={3}
-						ps={3}
-						pe={3}
-						flexDirection={"column"}
-						bg={"#000"}
+						flexDirection="column"
+						overflow="hidden"
 					>
 						<Box
-							borderRadius={"5px"}
-							overflow={"hidden"}
-							bg={"chakra-body-bg"}
+							pointerEvents={"auto"}
+							px={3}
+							pt={3}
+							bg={"#000"}
+							zIndex={10}
 						>
-							{renderSearchResultList()}
+							<Box
+								borderRadius={"5px"}
+								overflow={"hidden"}
+								bg={"chakra-body-bg"}
+								mb={3}
+							>
+								{renderSearchResultList()}
+							</Box>
 						</Box>
-						<Flex>
-							<PlaceInfoView
-								isPlaceVisible={userConfig?.isPlaceVisible}
-								selectedPlaceCoordinate={
-									userConfig?.selectedPlaceCoordinate
-								}
-								placeItem={state?.placeItem}
-							/>
+						<Box
+							flex={1}
+							width="100%"
+							height="calc(100vh - 120px)"
+							overflow={"visible"}
+						>
+							{state?.isAppLoaded && <MasterGlobeView />}
+						</Box>
+					</Flex>
+				) : (
+					// Desktop layout - side by side
+					<Flex
+						flex={1}
+						flexDirection={"row"}
+						overflow="hidden"
+					>
+						<Flex
+							flex={1}
+							pointerEvents={"auto"}
+							pt={3}
+							ps={3}
+							pe={3}
+							flexDirection={"column"}
+							bg={"#000"}
+						>
+							<Box
+								borderRadius={"5px"}
+								overflow={"hidden"}
+								bg={"chakra-body-bg"}
+							>
+								{renderSearchResultList()}
+							</Box>
+							<Flex>
+								<PlaceInfoView
+									isPlaceVisible={userConfig?.isPlaceVisible}
+									selectedPlaceCoordinate={
+										userConfig?.selectedPlaceCoordinate
+									}
+									placeItem={state?.placeItem}
+								/>
+							</Flex>
+						</Flex>
+						<Flex
+							flex={2}
+							overflow={"visible"}
+						>
+							{state?.isAppLoaded && <MasterGlobeView />}
 						</Flex>
 					</Flex>
-					<Flex
-						flex={2}
-						overflow={"visible"}
-					>
-						{state?.isAppLoaded && <MasterGlobeView />}
-					</Flex>
-				</Flex>
+				)}
 			</Flex>
 		);
 	};
