@@ -39,7 +39,6 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: [true, "State name is required"],
       trim: true,
-      index: true, // Add index for faster searches
     },
     author: {
       type: mongoose.Schema.Types.ObjectId,

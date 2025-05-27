@@ -11,14 +11,11 @@ import theme from "./theme";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-	<Provider store={store}>
-		<PersistGate
-			loading={<div>Loading...</div>}
-			persistor={persistor}
-		>
-			<ChakraProvider theme={theme}>
-				<App />
-			</ChakraProvider>
-		</PersistGate>
-	</Provider>
+  <Provider store={store}>
+    <PersistGate loading={<div>Loading...</div>} persistor={persistor}>
+      <ChakraProvider theme={theme}>
+        <App />
+      </ChakraProvider>
+    </PersistGate>
+  </Provider>
 );
