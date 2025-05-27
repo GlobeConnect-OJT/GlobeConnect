@@ -16,6 +16,18 @@ export const register = async (username, email, password) => {
   return response.data;
 };
 
+export const getUserData = async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    throw new Error('No token found');
+  }
+  
+  const response = await axios.get(`${API_URL}/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const logout = async () => {
   const token = localStorage.getItem('token');
   if (token) {

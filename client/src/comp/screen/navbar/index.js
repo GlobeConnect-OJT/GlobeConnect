@@ -58,7 +58,7 @@ const NavBarView = (props) => {
 	const btnRef = useRef();
 	const settingsRef = createRef();
 
-	const { user, logout: authLogout } = useAuth() || { user: null, logout: () => {} };
+	const { user, logout: authLogout } = useAuth();
 	const [isLoginOpen, setIsLoginOpen] = useState(false);
 	const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 	const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
