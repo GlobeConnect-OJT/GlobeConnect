@@ -17,10 +17,15 @@ import {
   useColorModeValue,
   VStack,
   Image,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
 } from "@chakra-ui/react";
 import { useParams } from "react-router-dom";
 import NavBarView from "../../comp/screen/navbar";
 import { getLocationFromCoordinates } from "../../comp/utils/geocoding";
+import { useLocationHistory } from "../../hooks/useLocationHistory";
 
 const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const { lat, lng } = useParams();
@@ -78,6 +83,14 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     }
   };
 
+  const {
+    history,
+    isLoading: isHistoryLoading,
+    error: historyError,
+  } = useLocationHistory(
+    locationInfo?.city || locationInfo?.state || locationInfo?.country
+  );
+
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const tabBg = useColorModeValue("gray.100", "gray.700");
@@ -128,14 +141,27 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       bg={useColorModeValue("gray.50", "gray.900")}
     >
       <NavBarView />
-      <Flex direction="column" h="calc(100vh - 64px)"> {/* Subtract navbar height */}
-        <Box py={6} px={4} bg={bgColor} borderBottomWidth="1px" borderColor={borderColor}>
+      <Flex direction="column" h="calc(100vh - 64px)">
+        <Box
+          py={6}
+          px={4}
+          bg={bgColor}
+          borderBottomWidth="1px"
+          borderColor={borderColor}
+        >
           <Container maxW="container.xl">
             <Flex direction="column" align="center">
               <Heading size="lg" mb={2}>
-                {locationInfo?.city || locationInfo?.state || locationInfo?.country || 'Location'}
+                {locationInfo?.city ||
+                  locationInfo?.state ||
+                  locationInfo?.country ||
+                  "Location"}
               </Heading>
-              <Text fontSize="md" color={useColorModeValue('gray.600', 'gray.400')} textAlign="center">
+              <Text
+                fontSize="md"
+                color={useColorModeValue("gray.600", "gray.400")}
+                textAlign="center"
+              >
                 {locationInfo?.displayName}
               </Text>
             </Flex>
@@ -144,11 +170,11 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
         <Box flex="1" position="relative" overflow="hidden">
           <Container maxW="container.xl" h="100%" py={4}>
-            <Tabs 
-              isFitted 
-              variant="enclosed" 
-              display="flex" 
-              flexDirection="column" 
+            <Tabs
+              isFitted
+              variant="enclosed"
+              display="flex"
+              flexDirection="column"
               h="100%"
             >
               <TabList>
@@ -174,74 +200,34 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
               <TabPanels flex="1" overflow="hidden">
                 <TabPanel h="100%" p={0}>
-                  <Box 
-                    h="100%" 
-                    overflowY="auto" 
+                  <Box
+                    h="100%"
+                    overflowY="auto"
                     pt={4}
                     sx={{
-                      '&::-webkit-scrollbar': {
-                        width: '4px',
-                      },
-                      '&::-webkit-scrollbar-track': {
-                        width: '6px',
-                      },
-                      '&::-webkit-scrollbar-thumb': {
-                        background: useColorModeValue('gray.300', 'gray.600'),
-                        borderRadius: '24px',
+                      "&::-webkit-scrollbar": { width: "4px" },
+                      "&::-webkit-scrollbar-track": { width: "6px" },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: useColorModeValue("gray.300", "gray.600"),
+                        borderRadius: "24px",
                       },
                     }}
                   >
                     <VStack spacing={4} align="stretch" pb={4}>
                       {posts.length > 0 ? (
-                        posts.map((post) => (
-                          <Box
-                            key={post._id}
-                            bg={bgColor}
-                            p={6}
-                            borderRadius="lg"
-                            borderWidth="1px"
-                            borderColor={borderColor}
-                            shadow="sm"
-                          >
-                            {/* Post content */}
-                            <Text fontSize="lg" fontWeight="medium" mb={2}>
-                              {post.title}
-                            </Text>
-                            <Text color={useColorModeValue('gray.600', 'gray.400')} mb={3}>
-                              {post.description}
-                            </Text>
-                            {post.images && post.images.length > 0 && (
-                              <Image
-                                src={post.images[0]}
-                                alt={post.title}
-                                borderRadius="md"
-                                maxH="300px"
-                                w="100%"
-                                objectFit="cover"
-                              />
-                            )}
-                            <Flex mt={4} justify="space-between" align="center">
-                              <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                                By {post.author?.username || "Unknown"}
-                              </Text>
-                              <Text fontSize="sm" color={useColorModeValue('gray.500', 'gray.400')}>
-                                {new Date(post.createdAt).toLocaleDateString()}
-                              </Text>
-                            </Flex>
-                          </Box>
-                        ))
+                        posts.map((post) => <PostCard key={post._id} post={post} />)
                       ) : (
-                        <Flex 
-                          direction="column" 
-                          align="center" 
-                          justify="center" 
+                        <Flex
+                          direction="column"
+                          align="center"
+                          justify="center"
                           py={10}
                           bg={bgColor}
                           borderRadius="lg"
                           borderWidth="1px"
                           borderColor={borderColor}
                         >
-                          <Text color={useColorModeValue('gray.600', 'gray.400')}>
+                          <Text color={useColorModeValue("gray.600", "gray.400")}>
                             No posts found for this location.
                           </Text>
                         </Flex>
@@ -251,43 +237,63 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
                 </TabPanel>
 
                 <TabPanel h="100%" p={0}>
-                  <Box 
-                    h="100%" 
+                  <Box
+                    h="100%"
                     overflowY="auto"
                     pt={4}
                     sx={{
-                      '&::-webkit-scrollbar': {
-                        width: '4px',
-                      },
-                      '&::-webkit-scrollbar-track': {
-                        width: '6px',
-                      },
-                      '&::-webkit-scrollbar-thumb': {
-                        background: useColorModeValue('gray.300', 'gray.600'),
-                        borderRadius: '24px',
+                      "&::-webkit-scrollbar": { width: "4px" },
+                      "&::-webkit-scrollbar-track": { width: "6px" },
+                      "&::-webkit-scrollbar-thumb": {
+                        background: useColorModeValue("gray.300", "gray.600"),
+                        borderRadius: "24px",
                       },
                     }}
                   >
-                    {/* History content with similar structure */}
                     <VStack spacing={4} align="stretch" pb={4}>
-                      <Box
-                        bg={bgColor}
-                        p={6}
-                        borderRadius="lg"
-                        borderWidth="1px"
-                        borderColor={borderColor}
-                        shadow="sm"
-                      >
-                        <Flex justify="space-between" align="center">
-                          <Text fontSize="lg" fontWeight="medium">
-                            Historical Event
-                          </Text>
-                          <Badge>2023</Badge>
+                      {isHistoryLoading ? (
+                        <Flex justify="center" p={8}>
+                          <Spinner size="xl" />
                         </Flex>
-                        <Text mt={2} color={useColorModeValue('gray.600', 'gray.400')}>
-                          This is an example historical event. Add your actual history data here.
+                      ) : historyError ? (
+                        <Alert status="error">
+                          <AlertIcon />
+                          <AlertTitle>Error loading history</AlertTitle>
+                          <AlertDescription>{historyError}</AlertDescription>
+                        </Alert>
+                      ) : history ? (
+                        <Box
+                          bg={bgColor}
+                          p={6}
+                          borderRadius="lg"
+                          borderWidth="1px"
+                          borderColor={borderColor}
+                          shadow="sm"
+                        >
+                          {history.thumbnail && (
+                            <Image
+                              src={history.thumbnail}
+                              alt={history.title}
+                              maxH="200px"
+                              objectFit="cover"
+                              borderRadius="md"
+                            />
+                          )}
+                          <Heading size="md" mt={4}>
+                            {history.title}
+                          </Heading>
+                          <Text
+                            color={useColorModeValue("gray.600", "gray.300")}
+                            mt={2}
+                          >
+                            {history.extract}
+                          </Text>
+                        </Box>
+                      ) : (
+                        <Text color="gray.500" textAlign="center">
+                          No historical information available
                         </Text>
-                      </Box>
+                      )}
                     </VStack>
                   </Box>
                 </TabPanel>

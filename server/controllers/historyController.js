@@ -6,18 +6,21 @@ const History = require("../models/History");
 // @access  Public
 exports.getStateHistory = async (req, res, next) => {
   try {
-    const { stateName } = req.params;
+    const { locationName } = req.params;
 
-    if (!stateName) {
+    // Sanitize and validate location name
+    if (!locationName || locationName.trim().length === 0) {
       return res.status(400).json({
         status: "fail",
-        message: "Please provide a state name",
+        message: "Please provide a valid location name",
       });
     }
 
+    const sanitizedLocationName = decodeURIComponent(locationName).trim();
+
     // Check if data exists in cache
     const cachedData = await History.findOne({
-      stateName: { $regex: new RegExp(`^${stateName}$`, "i") },
+      stateName: { $regex: new RegExp(`^${sanitizedLocationName}$`, "i") },
     });
 
     if (cachedData) {
@@ -36,27 +39,38 @@ exports.getStateHistory = async (req, res, next) => {
 
     try {
       // Try Wikipedia API first
-      const wikiResponse = await axios.get(
-        `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-          stateName
-        )}`
+      const wikiSearchResponse = await axios.get(
+        `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+          sanitizedLocationName
+        )}&format=json&origin=*`
       );
 
-      if (wikiResponse.data && wikiResponse.data.extract) {
-        historyData = {
-          title: wikiResponse.data.title,
-          extract: wikiResponse.data.extract,
-          thumbnail: wikiResponse.data.thumbnail?.source || null,
-          url: wikiResponse.data.content_urls?.desktop?.page || null,
-        };
-        source = "wikipedia";
+      if (wikiSearchResponse.data.query.search.length > 0) {
+        const pageTitle = wikiSearchResponse.data.query.search[0].title;
+        const wikiResponse = await axios.get(
+          `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
+            pageTitle
+          )}`
+        );
+
+        if (wikiResponse.data && wikiResponse.data.extract) {
+          historyData = {
+            title: wikiResponse.data.title,
+            extract: wikiResponse.data.extract,
+            thumbnail: wikiResponse.data.thumbnail?.source || null,
+            url: wikiResponse.data.content_urls?.desktop?.page || null,
+          };
+          source = "wikipedia";
+        }
       }
     } catch (error) {
       console.log("Wikipedia API error:", error.message);
-      // Wikipedia failed, try RESTCountries API as fallback for countries
+      // Try RESTCountries API as fallback
       try {
         const countryResponse = await axios.get(
-          `https://restcountries.com/v3.1/name/${encodeURIComponent(stateName)}`
+          `https://restcountries.com/v3.1/name/${encodeURIComponent(
+            sanitizedLocationName
+          )}`
         );
 
         if (countryResponse.data && countryResponse.data.length > 0) {
@@ -84,13 +98,13 @@ exports.getStateHistory = async (req, res, next) => {
     if (!historyData) {
       return res.status(404).json({
         status: "fail",
-        message: `No historical information found for ${stateName}`,
+        message: `No historical information found for ${sanitizedLocationName}`,
       });
     }
 
     // Save to cache
     await History.create({
-      stateName,
+      stateName: sanitizedLocationName,
       data: historyData,
       source,
     });
