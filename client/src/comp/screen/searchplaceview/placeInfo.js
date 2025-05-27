@@ -24,6 +24,7 @@ import {
 	Spacer,
 	Icon,
 	Spinner,
+	useMediaQuery,
 } from "@chakra-ui/react";
 
 import { InfoIcon } from "@chakra-ui/icons";
@@ -138,6 +139,9 @@ const PlaceInfoView = (props) => {
 	} = props;
 
 	const { colorMode } = useColorMode();
+	
+	// Check if the screen is mobile size
+	const [isMobile] = useMediaQuery("(max-width: 768px)");
 
 	const [state, setState] = useState({
 		placeDetailsObj: null,
@@ -1601,15 +1605,17 @@ const PlaceInfoView = (props) => {
 				<Flex
 					flex={1}
 					flexDirection={"column"}
-					maxHeight={"80vh"}
-					overflow={"hidden"}
+					maxHeight={isMobile ? "40vh" : "80vh"}
+					overflow={"auto"}
 					borderRadius={"5px"}
 					mt={2}
+					pb={isMobile ? 2 : 0}
 				>
 					<Flex
 						bg={"chakra-body-bg"}
-						overflow={"hidden"}
+						overflow={"auto"}
 						borderRadius={"5px"}
+						width="100%"
 					>
 						{renderPlaceInfo()}
 					</Flex>
