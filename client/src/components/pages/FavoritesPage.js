@@ -69,7 +69,7 @@ const FavoritesPage = () => {
       setFavorites(favorites.filter(fav => fav._id !== favoriteId));
       toast({
         title: "Removed from favorites",
-        description: "Location has been removed from your favorites",
+        description: "State has been removed from your favorites",
         status: "success",
         duration: 3000,
         isClosable: true,
@@ -121,7 +121,7 @@ const FavoritesPage = () => {
             >
               Back to Home
             </Button>
-            <Heading size="lg">My Favorite Locations</Heading>
+            <Heading size="lg">My Favorite States</Heading>
             <Badge ml={3} colorScheme="blue" fontSize="md">
               {favorites.length}
             </Badge>
@@ -132,13 +132,13 @@ const FavoritesPage = () => {
               <VStack spacing={4} textAlign="center">
                 <StarIcon boxSize={12} color="gray.400" />
                 <Heading size="md" color="gray.500">
-                  No favorites yet
+                  No favorite states yet
                 </Heading>
                 <Text color="gray.500">
-                  Start exploring locations and add them to your favorites!
+                  Start exploring states and add them to your favorites!
                 </Text>
                 <Button colorScheme="blue" onClick={handleBackToHome}>
-                  Explore Locations
+                  Explore States
                 </Button>
               </VStack>
             </Center>
@@ -157,7 +157,7 @@ const FavoritesPage = () => {
                     <Flex justify="space-between" align="center">
                       <VStack align="start" spacing={2} flex={1}>
                         <Heading size="md">
-                          {favorite.city || favorite.state || favorite.country || "Unknown Location"}
+                          {favorite.state || favorite.city || favorite.country || "Unknown Location"}
                         </Heading>
                         {favorite.displayName && (
                           <Text color={useColorModeValue("gray.600", "gray.400")} fontSize="sm">
@@ -165,12 +165,16 @@ const FavoritesPage = () => {
                           </Text>
                         )}
                         <HStack spacing={4}>
-                          <Text fontSize="xs" color="gray.500">
-                            Lat: {favorite.latitude.toFixed(4)}
-                          </Text>
-                          <Text fontSize="xs" color="gray.500">
-                            Lng: {favorite.longitude.toFixed(4)}
-                          </Text>
+                          {favorite.state && (
+                            <Text fontSize="xs" color="gray.500">
+                              State: {favorite.state}
+                            </Text>
+                          )}
+                          {favorite.country && (
+                            <Text fontSize="xs" color="gray.500">
+                              Country: {favorite.country}
+                            </Text>
+                          )}
                           <Text fontSize="xs" color="gray.500">
                             Added: {new Date(favorite.addedAt).toLocaleDateString()}
                           </Text>

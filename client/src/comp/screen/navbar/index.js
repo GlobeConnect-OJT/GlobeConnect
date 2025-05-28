@@ -38,6 +38,7 @@ import SettingsView from "../settings";
 import LoginModal from "../../../components/auth/LoginModal";
 import RegisterModal from "../../../components/auth/RegisterModal";
 import CreatePostModal from "../../screen/post/CreatePostModal";
+import NotificationIcon from "../../../components/notifications/NotificationIcon";
 
 import { useAuth } from "../../../context/AuthContext";
 import { logout } from "../../../services/authService";
@@ -184,7 +185,8 @@ const NavBarView = (props) => {
 					</Flex>
 					{isMobile ? (
 						// Mobile menu with dropdown
-						<Flex>
+						<Flex align="center" gap={2}>
+							{user && <NotificationIcon />}
 							<Menu>
 								<MenuButton
 									as={IconButton}
@@ -230,6 +232,7 @@ const NavBarView = (props) => {
 									>
 										Add Post
 									</Button>
+									<NotificationIcon />
 									<Button
 										variant="ghost"
 										onClick={handleFavoritesClick}

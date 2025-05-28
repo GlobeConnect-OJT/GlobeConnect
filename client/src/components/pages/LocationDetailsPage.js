@@ -40,7 +40,7 @@ import { FaPlus } from "react-icons/fa";
 import {
   addToFavorites,
   removeFromFavorites,
-  checkFavorite,
+  checkFavoriteByState,
 } from "../../services/favoritesService";
 
 const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
@@ -117,21 +117,13 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     fetchLocationInfo();
   }, [lat, lng, setIsMasterAppLoading]);
 
-  // Check if location is in favorites when user is logged in
+  // Check if state is in favorites when user is logged in and location info is available
   useEffect(() => {
     const checkIfFavorite = async () => {
-      if (user && lat && lng) {
-        const latitude = parseFloat(lat);
-        const longitude = parseFloat(lng);
-        
-        if (isNaN(latitude) || isNaN(longitude)) {
-          console.error("Invalid coordinates for favorites:", { lat, lng });
-          return;
-        }
-
+      if (user && locationInfo && locationInfo.state) {
         try {
           setIsLoadingFavorite(true);
-          const response = await checkFavorite(latitude, longitude);
+          const response = await checkFavoriteByState(locationInfo.state);
           setIsFavorite(response.data.isFavorite);
           if (response.data.favorite) {
             setFavoriteId(response.data.favorite._id);
@@ -145,7 +137,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     };
 
     checkIfFavorite();
-  }, [user, lat, lng]);
+  }, [user, locationInfo]);
 
   // Function to fetch posts
   const fetchPosts = async (stateName) => {
@@ -197,10 +189,10 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       return;
     }
 
-    if (!locationInfo) {
+    if (!locationInfo || !locationInfo.state) {
       toast({
         title: "Error",
-        description: "Location information not available",
+        description: "State information not available for this location",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -218,7 +210,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         setFavoriteId(null);
         toast({
           title: "Removed from favorites",
-          description: "Location has been removed from your favorites",
+          description: `${locationInfo.state} has been removed from your favorite states`,
           status: "success",
           duration: 3000,
           isClosable: true,
@@ -253,7 +245,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         setFavoriteId(response.data.favorite._id);
         toast({
           title: "Added to favorites",
-          description: "Location has been added to your favorites",
+          description: `${locationInfo.state} has been added to your favorite states`,
           status: "success",
           duration: 3000,
           isClosable: true,

@@ -20,6 +20,8 @@ import { connect } from "react-redux";
 import lodash from "lodash";
 import AppManager from "./comp/utils/AppManager";
 import { AuthProvider } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LocationDetailsPage from "./components/pages/LocationDetailsPage";
 import ProfilePage from './components/pages/ProfilePage';
@@ -94,20 +96,24 @@ const App = (props) => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ChakraProvider>
-          <Box width="100%" minHeight="100%" position="relative" bg="black">
-            <Routes>
-              <Route path="/" element={<MasterContainer />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/favorites" element={<FavoritesPage />} />
-              <Route
-                path="/location/:lat/:lng"
-                element={<LocationDetailsPage />}
-              />
-            </Routes>
-            {isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
-          </Box>
-        </ChakraProvider>
+        <SocketProvider>
+          <NotificationProvider>
+            <ChakraProvider>
+              <Box width="100%" minHeight="100%" position="relative" bg="black">
+                <Routes>
+                  <Route path="/" element={<MasterContainer />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/favorites" element={<FavoritesPage />} />
+                  <Route
+                    path="/location/:lat/:lng"
+                    element={<LocationDetailsPage />}
+                  />
+                </Routes>
+                {isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
+              </Box>
+            </ChakraProvider>
+          </NotificationProvider>
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );
