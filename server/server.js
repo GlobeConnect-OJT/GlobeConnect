@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+const http = require("http");
 
 // Load environment variables
 dotenv.config();
@@ -24,9 +25,14 @@ const connectDB = require("./config/db");
 
 // Initialize express app
 const app = express();
+const server = http.createServer(app);
 
 // Connect to database
 connectDB();
+
+// Initialize Socket.IO
+const { initSocket } = require("./utils/socket");
+const io = initSocket(server);
 
 // Set up rate limiting
 const limiter = rateLimit({
@@ -71,12 +77,13 @@ app.use("*", (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(
     `Server running in ${
       process.env.NODE_ENV || "development"
     } mode on port ${PORT}`
   );
+  console.log(`Socket.IO initialized`);
 });
 
 process.on("unhandledRejection", (err) => {

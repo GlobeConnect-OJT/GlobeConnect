@@ -35,6 +35,7 @@ import * as geolib from "geolib";
 
 import PlaceInfoView from "./placeInfo";
 import MasterGlobeView from "../globeview";
+import MapView from "../mapview";
 import NavBarView from "../navbar";
 
 import Actions from "../../redux/action";
@@ -328,7 +329,7 @@ const SearchPlaceView = (props) => {
 			return;
 		}
 
-		const maxResultCount = 15;
+		const maxResultCount = 50; // Increased from 15 to show more results
 
 		if (isCountrySearchEnabled) {
 			filterCountryArray = MasterWorldArray.map((item) => {
@@ -336,9 +337,11 @@ const SearchPlaceView = (props) => {
 			});
 
 			filterCountryArray = filterCountryArray.filter((item) => {
-				return item.name
-					.toLowerCase()
-					.includes(placeName.toLowerCase());
+				// Enhanced search to include partial matches and ISO codes
+				return item.name.toLowerCase().includes(placeName.toLowerCase()) ||
+					(item.iso && item.iso.toLowerCase().includes(placeName.toLowerCase())) ||
+					(item.iso3 && item.iso3.toLowerCase().includes(placeName.toLowerCase())) ||
+					(item.numeric_code && item.numeric_code.toLowerCase().includes(placeName.toLowerCase()));
 			});
 
 			filterCountryArray = closetSort(filterCountryArray, placeName);
@@ -378,9 +381,16 @@ const SearchPlaceView = (props) => {
 
 			filterStateArray = filterStateArray
 				.filter((item) => {
-					return item.name
-						.toLowerCase()
-						.includes(placeName.toLowerCase());
+					// Enhanced search to include partial word matches for states
+					const stateName = item.name.toLowerCase();
+					const searchTerm = placeName.toLowerCase();
+					
+					// Check for exact inclusion
+					if (stateName.includes(searchTerm)) return true;
+					
+					// Check for partial word matches
+					const stateWords = stateName.split(' ');
+					return stateWords.some(word => word.startsWith(searchTerm));
 				})
 				.slice(0, maxResultCount);
 
@@ -432,9 +442,18 @@ const SearchPlaceView = (props) => {
 
 			filterCityArray = filterCityArray
 				.filter((item) => {
-					return item?.name
-						?.toLowerCase()
-						.includes(placeName.toLowerCase());
+					// Enhanced search to include partial word matches for cities
+					if (!item?.name) return false;
+					
+					const cityName = item.name.toLowerCase();
+					const searchTerm = placeName.toLowerCase();
+					
+					// Check for exact inclusion
+					if (cityName.includes(searchTerm)) return true;
+					
+					// Check for partial word matches
+					const cityWords = cityName.split(' ');
+					return cityWords.some(word => word.startsWith(searchTerm));
 				})
 				.slice(0, maxResultCount);
 
@@ -448,16 +467,15 @@ const SearchPlaceView = (props) => {
 			});
 		}
 
+		// Combine all results without additional slicing to show more results
 		let searchResultArray = [
 			...filterCityArray,
 			...filterStateArray,
 			...filterCountryArray,
 		];
 
-		searchResultArray = closetSort(searchResultArray, placeName).slice(
-			0,
-			maxResultCount
-		);
+		// Sort results by relevance but don't limit the total number
+		searchResultArray = closetSort(searchResultArray, placeName);
 
 		updateState({
 			isSearching: false,
@@ -725,7 +743,11 @@ const SearchPlaceView = (props) => {
 							height="calc(100vh - 120px)"
 							overflow={"visible"}
 						>
-							{state?.isAppLoaded && <MasterGlobeView />}
+							{state?.isAppLoaded && (
+								userConfig.viewMode === 'globe' ? 
+								<MasterGlobeView /> : 
+								<MapView />
+							)}
 						</Box>
 					</Flex>
 				) : (
@@ -765,7 +787,11 @@ const SearchPlaceView = (props) => {
 							flex={2}
 							overflow={"visible"}
 						>
-							{state?.isAppLoaded && <MasterGlobeView />}
+							{state?.isAppLoaded && (
+								userConfig.viewMode === 'globe' ? 
+								<MasterGlobeView /> : 
+								<MapView />
+							)}
 						</Flex>
 					</Flex>
 				)}

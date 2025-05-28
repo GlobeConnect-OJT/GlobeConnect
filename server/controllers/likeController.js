@@ -1,4 +1,6 @@
 const Post = require("../models/Post");
+const User = require("../models/User");
+const { getIO } = require("../utils/socket");
 
 // @desc    Toggle like on a post
 // @route   POST /api/posts/:id/like
@@ -24,6 +26,22 @@ exports.toggleLike = async (req, res, next) => {
       // User already liked, so remove the like
       post.likes.splice(userIndex, 1);
       await post.save();
+      
+      // Get user info for the like notification
+      const user = await User.findById(req.user.id).select('username avatar');
+      
+      // Emit socket event for real-time like update
+      const io = getIO();
+      io.to(`post:${post._id}`).emit('like-update', {
+        postId: post._id,
+        likes: post.likes,
+        action: 'unlike',
+        user: {
+          id: req.user.id,
+          username: user.username,
+          avatar: user.avatar
+        }
+      });
 
       return res.status(200).json({
         status: "success",
@@ -37,6 +55,22 @@ exports.toggleLike = async (req, res, next) => {
       // User has not liked, so add the like
       post.likes.push(req.user._id);
       await post.save();
+      
+      // Get user info for the like notification
+      const user = await User.findById(req.user.id).select('username avatar');
+      
+      // Emit socket event for real-time like update
+      const io = getIO();
+      io.to(`post:${post._id}`).emit('like-update', {
+        postId: post._id,
+        likes: post.likes,
+        action: 'like',
+        user: {
+          id: req.user.id,
+          username: user.username,
+          avatar: user.avatar
+        }
+      });
 
       return res.status(200).json({
         status: "success",
