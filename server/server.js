@@ -5,6 +5,8 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const path = require("path");
+const http = require("http");
+const socketIo = require("socket.io");
 
 // Load environment variables
 dotenv.config();
@@ -15,6 +17,7 @@ const postRoutes = require("./routes/postRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const favoritesRoutes = require("./routes/favoritesRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 // Import error handler middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -24,6 +27,39 @@ const connectDB = require("./config/db");
 
 // Initialize express app
 const app = express();
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO
+const io = socketIo(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+// Make io accessible to our routes
+app.set("io", io);
+
+// Socket.IO connection handling
+io.on("connection", (socket) => {
+  console.log("New client connected:", socket.id);
+
+  // Join user to their personal room for notifications
+  socket.on("join", (userId) => {
+    if (userId) {
+      socket.join(`user_${userId}`);
+      console.log(`User ${userId} joined their notification room`);
+    }
+  });
+
+  // Handle disconnect
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
 
 // Connect to database
 connectDB();
@@ -52,6 +88,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/favorites", favoritesRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Base route
 app.get("/", (req, res) => {
@@ -71,7 +108,7 @@ app.use("*", (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(
     `Server running in ${
       process.env.NODE_ENV || "development"

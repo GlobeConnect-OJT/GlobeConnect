@@ -3,6 +3,7 @@ const APIFeatures = require("../utils/apiFeatures");
 const cloudinary = require("../utils/cloudinary");
 const fs = require("fs");
 const path = require("path");
+const { createNotificationsForFavoriteLocationEnhanced } = require("../services/notificationService");
 
 // @desc    Create a post
 // @route   POST /api/posts
@@ -41,6 +42,15 @@ exports.createPost = async (req, res, next) => {
       images: imageUrls,
       author: req.user._id,
     });
+
+    // Create notifications for users who have this location in their favorites
+    try {
+      const io = req.app.get("io");
+      await createNotificationsForFavoriteLocationEnhanced(post, io);
+    } catch (notificationError) {
+      console.error("Error creating notifications:", notificationError);
+      // Don't fail the post creation if notifications fail
+    }
 
     res.status(201).json({
       status: "success",
