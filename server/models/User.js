@@ -40,7 +40,10 @@ const userSchema = new mongoose.Schema(
           required: true,
         },
         city: String,
-        state: String,
+        state: {
+          type: String,
+          required: [true, "State is required for favorites"],
+        },
         country: String,
         displayName: String,
         addedAt: {

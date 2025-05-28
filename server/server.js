@@ -27,11 +27,12 @@ const connectDB = require("./config/db");
 
 // Initialize express app
 const app = express();
-
-// Create HTTP server
 const server = http.createServer(app);
 
-// Initialize Socket.IO
+// Connect to database
+connectDB();
+
+// Initialize Socket.IO with CORS configuration
 const io = socketIo(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:3000",
@@ -60,9 +61,6 @@ io.on("connection", (socket) => {
     console.log("Client disconnected:", socket.id);
   });
 });
-
-// Connect to database
-connectDB();
 
 // Set up rate limiting
 const limiter = rateLimit({
@@ -114,6 +112,7 @@ server.listen(PORT, () => {
       process.env.NODE_ENV || "development"
     } mode on port ${PORT}`
   );
+  console.log(`Socket.IO initialized`);
 });
 
 process.on("unhandledRejection", (err) => {
