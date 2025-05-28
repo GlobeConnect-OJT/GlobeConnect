@@ -16,6 +16,7 @@ import {
 	MenuButton,
 	MenuList,
 	MenuItem,
+	Avatar,
 } from "@chakra-ui/react";
 
 import {
@@ -75,17 +76,21 @@ const NavBarView = (props) => {
 
 	const navigate = useNavigate();
 
-	const handleLogout = async () => {
-		try {
-			await logout(); // Call the API logout
-			authLogout(); // Update the auth context
-		} catch (error) {
-			console.error("Logout failed:", error);
-		}
-	};
-
 	const handleTitleClick = () => {
 		navigate('/');
+	};
+
+	const handleProfileClick = () => {
+		navigate('/profile');
+	};
+
+	const handleLogout = async () => {
+		try {
+			await authLogout();
+			navigate('/');
+		} catch (error) {
+			console.error('Logout failed:', error);
+		}
 	};
 
 	/*  Life-cycles Methods */
@@ -178,6 +183,7 @@ const NavBarView = (props) => {
 								<MenuList>
 									{user ? (
 										<>
+											<MenuItem onClick={handleProfileClick}>Profile</MenuItem>
 											<MenuItem onClick={onPressAddPost}>Add Post</MenuItem>
 											<MenuItem onClick={handleLogout}>Logout</MenuItem>
 										</>
@@ -200,13 +206,6 @@ const NavBarView = (props) => {
 							{user ? (
 								<>
 									<Button
-										variant="ghost"
-										onClick={handleLogout}
-										mr={2}
-									>
-										Logout
-									</Button>
-									<Button
 										leftIcon={<AddIcon />}
 										variant="solid"
 										colorScheme="blue"
@@ -214,6 +213,22 @@ const NavBarView = (props) => {
 										mr={2}
 									>
 										Add Post
+									</Button>
+									<Tooltip label="Profile">
+										<IconButton
+											aria-label="Profile"
+											icon={<Avatar size="sm" name={user?.name || user?.email} />}
+											variant="ghost"
+											onClick={handleProfileClick}
+											mr={2}
+										/>
+									</Tooltip>
+									<Button
+										variant="ghost"
+										onClick={handleLogout}
+										mr={2}
+									>
+										Logout
 									</Button>
 								</>
 							) : (

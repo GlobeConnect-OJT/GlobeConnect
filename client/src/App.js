@@ -22,6 +22,7 @@ import AppManager from "./comp/utils/AppManager";
 import { AuthProvider } from "./context/AuthContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LocationDetailsPage from "./components/pages/LocationDetailsPage";
+import ProfilePage from './components/pages/ProfilePage';
 
 const App = (props) => {
   /*  Life-cycles Methods */
@@ -96,6 +97,7 @@ const App = (props) => {
           <Box width="100%" minHeight="100%" position="relative" bg="black">
             <Routes>
               <Route path="/" element={<MasterContainer />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route
                 path="/location/:lat/:lng"
                 element={<LocationDetailsPage />}
