@@ -24,7 +24,10 @@ import {
   Button,
   useDisclosure,
   useToast,
+  IconButton,
+  Tooltip,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
 import { useParams } from "react-router-dom";
 import NavBarView from "../../comp/screen/navbar";
 import { getLocationFromCoordinates } from "../../comp/utils/geocoding";
@@ -34,13 +37,23 @@ import KanbanBoard from "../../components/posts/KanbanBoard";
 import CreatePostModal from "../../components/posts/CreatePostModal";
 import { initSocket } from "../../utils/socket";
 import { FaPlus } from "react-icons/fa";
+import {
+  addToFavorites,
+  removeFromFavorites,
+  checkFavorite,
+} from "../../services/favoritesService";
 
 const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const { lat, lng } = useParams();
   const [locationInfo, setLocationInfo] = useState(null);
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth() || { user: null };
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteId, setFavoriteId] = useState(null);
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
+  
+  const authContext = useAuth();
+  const user = authContext?.user || null;
   const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure();
   const toast = useToast();
 
@@ -70,11 +83,22 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   // Fetch location info
   useEffect(() => {
     const fetchLocationInfo = async () => {
+      // Validate coordinates
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      
+      if (isNaN(latitude) || isNaN(longitude)) {
+        console.error("Invalid coordinates:", { lat, lng });
+        setIsMasterAppLoading(false);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       try {
         const data = await getLocationFromCoordinates({
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lng),
+          latitude,
+          longitude,
         });
         setLocationInfo(data);
         if (data.state) {
@@ -92,6 +116,36 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
     fetchLocationInfo();
   }, [lat, lng, setIsMasterAppLoading]);
+
+  // Check if location is in favorites when user is logged in
+  useEffect(() => {
+    const checkIfFavorite = async () => {
+      if (user && lat && lng) {
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        
+        if (isNaN(latitude) || isNaN(longitude)) {
+          console.error("Invalid coordinates for favorites:", { lat, lng });
+          return;
+        }
+
+        try {
+          setIsLoadingFavorite(true);
+          const response = await checkFavorite(latitude, longitude);
+          setIsFavorite(response.data.isFavorite);
+          if (response.data.favorite) {
+            setFavoriteId(response.data.favorite._id);
+          }
+        } catch (error) {
+          console.error("Error checking favorite status:", error);
+        } finally {
+          setIsLoadingFavorite(false);
+        }
+      }
+    };
+
+    checkIfFavorite();
+  }, [user, lat, lng]);
 
   // Function to fetch posts
   const fetchPosts = async (stateName) => {
@@ -128,6 +182,95 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const handleCreatePost = () => {
     // Open create post modal
     onCreateModalOpen();
+  };
+
+  // Handle adding/removing from favorites
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to add locations to favorites",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!locationInfo) {
+      toast({
+        title: "Error",
+        description: "Location information not available",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      setIsLoadingFavorite(true);
+
+      if (isFavorite && favoriteId) {
+        // Remove from favorites
+        await removeFromFavorites(favoriteId);
+        setIsFavorite(false);
+        setFavoriteId(null);
+        toast({
+          title: "Removed from favorites",
+          description: "Location has been removed from your favorites",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Add to favorites
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        
+        if (isNaN(latitude) || isNaN(longitude)) {
+          toast({
+            title: "Error",
+            description: "Invalid location coordinates",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
+        const favoriteData = {
+          latitude,
+          longitude,
+          city: locationInfo.city,
+          state: locationInfo.state,
+          country: locationInfo.country,
+          displayName: locationInfo.displayName,
+        };
+
+        const response = await addToFavorites(favoriteData);
+        setIsFavorite(true);
+        setFavoriteId(response.data.favorite._id);
+        toast({
+          title: "Added to favorites",
+          description: "Location has been added to your favorites",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update favorites",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoadingFavorite(false);
+    }
   };
 
   const {
@@ -181,8 +324,8 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
           city: locationInfo?.city,
           state: locationInfo?.state,
           country: locationInfo?.country,
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lng)
+          latitude: !isNaN(parseFloat(lat)) ? parseFloat(lat) : 0,
+          longitude: !isNaN(parseFloat(lng)) ? parseFloat(lng) : 0
         }}
         onPostCreated={handlePostCreated}
       />
@@ -196,12 +339,33 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         >
           <Container maxW="container.xl">
             <Flex direction="column" align="center">
-              <Heading size="lg" mb={2}>
-                {locationInfo?.city ||
-                  locationInfo?.state ||
-                  locationInfo?.country ||
-                  "Location"}
-              </Heading>
+              <Flex align="center" gap={4} mb={2}>
+                <Heading size="lg">
+                  {locationInfo?.city ||
+                    locationInfo?.state ||
+                    locationInfo?.country ||
+                    "Location"}
+                </Heading>
+                {user && (
+                  <Tooltip
+                    label={
+                      isFavorite ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <IconButton
+                      icon={<StarIcon />}
+                      colorScheme={isFavorite ? "yellow" : "gray"}
+                      variant={isFavorite ? "solid" : "outline"}
+                      size="md"
+                      isLoading={isLoadingFavorite}
+                      onClick={handleFavoriteToggle}
+                      aria-label={
+                        isFavorite ? "Remove from favorites" : "Add to favorites"
+                      }
+                    />
+                  </Tooltip>
+                )}
+              </Flex>
               <Text
                 fontSize="md"
                 color={useColorModeValue("gray.600", "gray.400")}
