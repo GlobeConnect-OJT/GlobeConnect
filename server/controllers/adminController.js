@@ -1,38 +1,56 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
-const APIFeatures = require("../utils/apiFeatures");
 const cloudinary = require("../utils/cloudinary");
+const {
+  buildQueryFilters,
+  buildSearchConditions,
+  buildSortOptions,
+  buildFieldSelection,
+  buildPagination,
+} = require("../utils/queryHelpers");
 
 // @desc    Get all posts with admin privileges (additional filtering options)
 // @route   GET /api/admin/posts
 // @access  Private (Admin only)
 exports.getAllPosts = async (req, res, next) => {
   try {
-    // Create a query object with filtering, sorting, and pagination
-    const features = new APIFeatures(Post.find(), req.query)
-      .filter()
-      .search()
-      .sort()
-      .limitFields()
-      .paginate();
+    // Build query filters
+    const filters = buildQueryFilters(req.query);
 
-    // Add population for author details
-    const query = features.query.populate([
-      {
-        path: "author",
-        select: "username email",
-      },
-      {
-        path: "comments.user",
-        select: "username",
-      },
-    ]);
+    // Build search conditions
+    const searchConditions = buildSearchConditions(req.query.search);
 
-    // Execute the query
-    const posts = await query;
+    // Combine filters and search conditions
+    const queryConditions = { ...filters, ...searchConditions };
+
+    // Build sort options
+    const sortOptions = buildSortOptions(req.query.sort);
+
+    // Build field selection
+    const fieldSelection = buildFieldSelection(req.query.fields);
+
+    // Build pagination
+    const { skip, limit } = buildPagination(req.query.page, req.query.limit);
+
+    // Execute the query with all options
+    const posts = await Post.find(queryConditions)
+      .populate([
+        {
+          path: "author",
+          select: "username email",
+        },
+        {
+          path: "comments.user",
+          select: "username",
+        },
+      ])
+      .sort(sortOptions)
+      .select(fieldSelection)
+      .skip(skip)
+      .limit(limit);
 
     // Get total count for pagination
-    const totalPosts = await Post.countDocuments();
+    const totalPosts = await Post.countDocuments(queryConditions);
 
     // Send response
     res.status(200).json({
