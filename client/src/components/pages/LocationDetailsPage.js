@@ -270,7 +270,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     isLoading: isHistoryLoading,
     error: historyError,
   } = useLocationHistory(
-    locationInfo?.city || locationInfo?.state || locationInfo?.country
+    locationInfo?.state || locationInfo?.country || locationInfo?.city
   );
 
   const bgColor = useColorModeValue("white", "gray.800");
@@ -333,8 +333,8 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
             <Flex direction="column" align="center">
               <Flex align="center" gap={4} mb={2}>
                 <Heading size="lg">
-                  {locationInfo?.city ||
-                    locationInfo?.state ||
+                  {locationInfo?.state ||
+                    locationInfo?.city ||
                     locationInfo?.country ||
                     "Location"}
                 </Heading>
