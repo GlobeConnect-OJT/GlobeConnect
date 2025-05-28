@@ -12,6 +12,9 @@ router
   .get(postController.getAllPosts)
   .post(protect, upload.array("images", 5), postController.createPost);
 
+// Current user's posts route - IMPORTANT: This must be BEFORE /:id routes
+router.get("/user", protect, postController.getCurrentUserPosts);
+
 router
   .route("/:id")
   .get(postController.getPostById)
@@ -21,7 +24,7 @@ router
 // State-specific posts
 router.get("/state/:stateName", postController.getPostsByState);
 
-// User-specific posts
+// User-specific posts (by userId)
 router.get("/user/:userId", postController.getPostsByUser);
 
 // Comments routes
@@ -37,7 +40,6 @@ router
 
 // Likes routes
 router.route("/:id/like").post(protect, likeController.toggleLike);
-
 router.get("/:id/likes", likeController.getLikes);
 
 module.exports = router;

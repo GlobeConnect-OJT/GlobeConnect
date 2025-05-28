@@ -1089,12 +1089,12 @@ const PlaceInfoView = (props) => {
 
 	const renderPlaceProperty = (propertyItem, key) => {
 		if (lodash.isNil(propertyItem?.value)) {
-			return;
+			return null;
 		}
 
 		return (
 			<Flex
-				key={`${propertyItem?.type}-${key}`}
+				key={`property-${propertyItem.type}-${key}`} // Updated key
 				flexDirection="row"
 				alignItems={"center"}
 				justifyContent={"space-between"}
@@ -1141,112 +1141,108 @@ const PlaceInfoView = (props) => {
 		);
 	};
 
-	const renderTimeZoneProperty = (propertyItem, index) => {
+	const renderTimeZoneProperty = (propertyItem, index, parentIndex) => {
 		if (lodash.isNil(propertyItem?.value)) {
-			return;
+			return null;
 		}
 
 		return (
-			<>
+			<Flex
+				key={`timezone-${parentIndex}-${propertyItem.type}-${index}`} // Updated key
+				flexDirection="row"
+				alignItems={"center"}
+				justifyContent={"space-between"}
+				mb={2}
+			>
+				<Text fontSize={"sm"}>{`${propertyItem?.title}`}</Text>
 				<Flex
-					key={`TimeZone-${propertyItem?.value}-${index}`}
-					flexDirection="row"
+					justify={"center"}
 					alignItems={"center"}
-					justifyContent={"space-between"}
-					mb={2}
+					// height={1}
+					flexGrow={1}
+					marginX={"5px"}
 				>
-					<Text fontSize={"sm"}>{`${propertyItem?.title}`}</Text>
-					<Flex
-						justify={"center"}
-						alignItems={"center"}
-						// height={1}
-						flexGrow={1}
-						marginX={"5px"}
-					>
-						<Divider zIndex={0} />
-					</Flex>
-					{!lodash.isNil(propertyItem?.type) &&
-					["currentTime"].includes(propertyItem?.type) ? (
-						<Code
-							fontSize={"sm"}
-							textAlign={"right"}
-							colorScheme="purple"
-						>
-							<Clock
-								format={propertyItem?.format}
-								ticking={propertyItem?.ticking}
-								blinking={propertyItem?.blinking}
-								timezone={propertyItem?.value}
-							/>
-						</Code>
-					) : (
-						<Code
-							fontSize={"sm"}
-							textAlign={"right"}
-							colorScheme="linkedin"
-						>
-							{`${propertyItem?.value}`.trim()}
-						</Code>
-					)}
+					<Divider zIndex={0} />
 				</Flex>
-			</>
+				{!lodash.isNil(propertyItem?.type) &&
+				["currentTime"].includes(propertyItem?.type) ? (
+					<Code
+						fontSize={"sm"}
+						textAlign={"right"}
+						colorScheme="purple"
+					>
+						<Clock
+							format={propertyItem?.format}
+							ticking={propertyItem?.ticking}
+							blinking={propertyItem?.blinking}
+							timezone={propertyItem?.value}
+						/>
+					</Code>
+				) : (
+					<Code
+						fontSize={"sm"}
+						textAlign={"right"}
+						colorScheme="linkedin"
+					>
+						{`${propertyItem?.value}`.trim()}
+					</Code>
+				)}
+			</Flex>
 		);
 	};
 
-	const renderFavPlaceProperty = (propertyItem, index) => {
+	const renderFavPlaceProperty = (propertyItem, index, parentIndex) => {
 		if (lodash.isNil(propertyItem?.value)) {
-			return;
+			return null;
 		}
 
 		return (
-			<>
+			<Flex
+				key={`favplace-${parentIndex}-${propertyItem.type}-${index}`} // Updated key
+				flexDirection="row"
+				alignItems={"center"}
+				justifyContent={"space-between"}
+				mb={2}
+			>
+				<Text fontSize={"sm"}>{`${propertyItem?.title}`}</Text>
 				<Flex
-					key={`FavPlace-${propertyItem?.value}-${index}`}
-					flexDirection="row"
+					justify={"center"}
 					alignItems={"center"}
-					justifyContent={"space-between"}
-					mb={2}
+					// height={1}
+					flexGrow={1}
+					marginX={"5px"}
 				>
-					<Text fontSize={"sm"}>{`${propertyItem?.title}`}</Text>
-					<Flex
-						justify={"center"}
-						alignItems={"center"}
-						// height={1}
-						flexGrow={1}
-						marginX={"5px"}
-					>
-						<Divider zIndex={0} />
-					</Flex>
-					{!lodash.isNil(propertyItem?.type) &&
-					[
-						"currentDateV1",
-						"currentDateV2",
-						"currentDate",
-						"currentTime",
-					].includes(propertyItem?.type) ? (
-						<Code
-							fontSize={"sm"}
-							textAlign={"right"}
-							colorScheme="purple"
-						>
-							<Clock
-								format={propertyItem?.format}
-								ticking={propertyItem?.ticking}
-								blinking={propertyItem?.blinking}
-								timezone={propertyItem?.value}
-							/>
-						</Code>
-					) : (
-						<Code
-							fontSize={"sm"}
-							textAlign={"right"}
-							colorScheme="linkedin"
-						>
-						{`${propertyItem?.value}`.trim()}
-						</Code>
-					)}
+					<Divider zIndex={0} />
 				</Flex>
-			</>
+				{!lodash.isNil(propertyItem?.type) &&
+				[
+					"currentDateV1",
+					"currentDateV2",
+					"currentDate",
+					"currentTime",
+				].includes(propertyItem?.type) ? (
+					<Code
+						fontSize={"sm"}
+						textAlign={"right"}
+						colorScheme="purple"
+					>
+						<Clock
+							format={propertyItem?.format}
+							ticking={propertyItem?.ticking}
+							blinking={propertyItem?.blinking}
+							timezone={propertyItem?.value}
+						/>
+					</Code>
+				) : (
+					<Code
+						fontSize={"sm"}
+						textAlign={"right"}
+						colorScheme="linkedin"
+					>
+						{`${propertyItem?.value}`.trim()}
+					</Code>
+				)}
+			</Flex>
 		);
 	};
 
@@ -1292,7 +1288,7 @@ const PlaceInfoView = (props) => {
 										).map((item, index) => {
 											return renderPlaceProperty(
 												state?.placeDetailsObj[item],
-												`place${index}`
+												`place-${index}`
 											);
 										})}
 									</Box>
@@ -1420,7 +1416,8 @@ const PlaceInfoView = (props) => {
 																		timezoneObj[
 																			item
 																		],
-																		timeIndex
+																		timeIndex,
+																		index
 																	);
 																}
 															)}
@@ -1571,7 +1568,8 @@ const PlaceInfoView = (props) => {
 																	favPlaceObj[
 																		item
 																	],
-																	placeIndex
+																	placeIndex,
+																	index
 																);
 															}
 														)}

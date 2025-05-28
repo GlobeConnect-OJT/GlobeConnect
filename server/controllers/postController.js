@@ -100,6 +100,38 @@ exports.getAllPosts = async (req, res, next) => {
   }
 };
 
+// @desc    Get current user's posts
+// @route   GET /api/posts/user
+// @access  Private
+exports.getCurrentUserPosts = async (req, res, next) => {
+  try {
+    const features = new APIFeatures(Post.find({ author: req.user._id }), req.query)
+      .sort()
+      .limitFields()
+      .paginate();
+
+    const query = features.query.populate({
+      path: "author",
+      select: "username email",
+    });
+
+    const posts = await query;
+
+    // Get total count
+    const totalPosts = await Post.countDocuments({ author: req.user._id });
+
+    res.status(200).json({
+      status: "success",
+      results: posts.length,
+      total: totalPosts,
+      posts: posts, // Frontend expects 'posts' directly
+    });
+  } catch (error) {
+    console.error("Error fetching current user posts:", error);
+    next(error);
+  }
+};
+
 // @desc    Get a single post by ID
 // @route   GET /api/posts/:id
 // @access  Public

@@ -1,4 +1,6 @@
 const Post = require("../models/Post");
+const User = require("../models/User");
+const { getIO } = require("../utils/socket");
 
 // @desc    Add comment to a post
 // @route   POST /api/posts/:id/comments
@@ -49,6 +51,13 @@ exports.addComment = async (req, res, next) => {
     const populatedComment = populatedPost.comments.find(
       (comment) => comment._id.toString() === addedComment._id.toString()
     );
+
+    // Emit socket event for real-time comment update
+    const io = getIO();
+    io.to(`post:${post._id}`).emit('comment-added', {
+      postId: post._id,
+      comment: populatedComment
+    });
 
     res.status(201).json({
       status: "success",
@@ -136,6 +145,13 @@ exports.deleteComment = async (req, res, next) => {
     );
 
     await post.save();
+
+    // Emit socket event for real-time comment deletion
+    const io = getIO();
+    io.to(`post:${post._id}`).emit('comment-deleted', {
+      postId: post._id,
+      commentId: commentId
+    });
 
     res.status(204).json({
       status: "success",
