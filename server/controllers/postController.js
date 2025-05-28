@@ -1,9 +1,17 @@
 const Post = require("../models/Post");
-const APIFeatures = require("../utils/apiFeatures");
 const cloudinary = require("../utils/cloudinary");
 const fs = require("fs");
 const path = require("path");
-const { createNotificationsForFavoriteLocationEnhanced } = require("../services/notificationService");
+const {
+  createNotificationsForFavoriteLocationEnhanced,
+} = require("../services/notificationService");
+const {
+  buildQueryFilters,
+  buildSearchConditions,
+  buildSortOptions,
+  buildFieldSelection,
+  buildPagination,
+} = require("../utils/queryHelpers");
 
 // @desc    Create a post
 // @route   POST /api/posts
@@ -76,25 +84,37 @@ exports.createPost = async (req, res, next) => {
 // @access  Public
 exports.getAllPosts = async (req, res, next) => {
   try {
-    // Create a query object with filtering, sorting, and pagination
-    const features = new APIFeatures(Post.find(), req.query)
-      .filter()
-      .search()
-      .sort()
-      .limitFields()
-      .paginate();
+    // Build query filters
+    const filters = buildQueryFilters(req.query);
 
-    // Add population for author details
-    const query = features.query.populate({
-      path: "author",
-      select: "username",
-    });
+    // Build search conditions
+    const searchConditions = buildSearchConditions(req.query.search);
 
-    // Execute the query
-    const posts = await query;
+    // Combine filters and search conditions
+    const queryConditions = { ...filters, ...searchConditions };
+
+    // Build sort options
+    const sortOptions = buildSortOptions(req.query.sort);
+
+    // Build field selection
+    const fieldSelection = buildFieldSelection(req.query.fields);
+
+    // Build pagination
+    const { skip, limit } = buildPagination(req.query.page, req.query.limit);
+
+    // Execute the query with all options
+    const posts = await Post.find(queryConditions)
+      .populate({
+        path: "author",
+        select: "username",
+      })
+      .sort(sortOptions)
+      .select(fieldSelection)
+      .skip(skip)
+      .limit(limit);
 
     // Get total count for pagination
-    const totalPosts = await Post.countDocuments();
+    const totalPosts = await Post.countDocuments(queryConditions);
 
     // Send response
     res.status(200).json({
@@ -115,17 +135,24 @@ exports.getAllPosts = async (req, res, next) => {
 // @access  Private
 exports.getCurrentUserPosts = async (req, res, next) => {
   try {
-    const features = new APIFeatures(Post.find({ author: req.user._id }), req.query)
-      .sort()
-      .limitFields()
-      .paginate();
+    // Build sort options
+    const sortOptions = buildSortOptions(req.query.sort);
 
-    const query = features.query.populate({
-      path: "author",
-      select: "username email",
-    });
+    // Build field selection
+    const fieldSelection = buildFieldSelection(req.query.fields);
 
-    const posts = await query;
+    // Build pagination
+    const { skip, limit } = buildPagination(req.query.page, req.query.limit);
+
+    const posts = await Post.find({ author: req.user._id })
+      .populate({
+        path: "author",
+        select: "username email",
+      })
+      .sort(sortOptions)
+      .select(fieldSelection)
+      .skip(skip)
+      .limit(limit);
 
     // Get total count
     const totalPosts = await Post.countDocuments({ author: req.user._id });
@@ -319,25 +346,30 @@ exports.getPostsByState = async (req, res, next) => {
   try {
     const { stateName } = req.params;
 
-    const features = new APIFeatures(
-      Post.find({ stateName: { $regex: new RegExp(stateName, "i") } }),
-      req.query
-    )
-      .sort()
-      .limitFields()
-      .paginate();
+    // Build base query condition for state name
+    const baseCondition = { stateName: { $regex: new RegExp(stateName, "i") } };
 
-    const query = features.query.populate({
-      path: "author",
-      select: "username",
-    });
+    // Build sort options
+    const sortOptions = buildSortOptions(req.query.sort);
 
-    const posts = await query;
+    // Build field selection
+    const fieldSelection = buildFieldSelection(req.query.fields);
+
+    // Build pagination
+    const { skip, limit } = buildPagination(req.query.page, req.query.limit);
+
+    const posts = await Post.find(baseCondition)
+      .populate({
+        path: "author",
+        select: "username",
+      })
+      .sort(sortOptions)
+      .select(fieldSelection)
+      .skip(skip)
+      .limit(limit);
 
     // Get total count
-    const totalPosts = await Post.countDocuments({
-      stateName: { $regex: new RegExp(stateName, "i") },
-    });
+    const totalPosts = await Post.countDocuments(baseCondition);
 
     res.status(200).json({
       status: "success",
@@ -359,20 +391,30 @@ exports.getPostsByUser = async (req, res, next) => {
   try {
     const { userId } = req.params;
 
-    const features = new APIFeatures(Post.find({ author: userId }), req.query)
-      .sort()
-      .limitFields()
-      .paginate();
+    // Build base query condition for user
+    const baseCondition = { author: userId };
 
-    const query = features.query.populate({
-      path: "author",
-      select: "username",
-    });
+    // Build sort options
+    const sortOptions = buildSortOptions(req.query.sort);
 
-    const posts = await query;
+    // Build field selection
+    const fieldSelection = buildFieldSelection(req.query.fields);
+
+    // Build pagination
+    const { skip, limit } = buildPagination(req.query.page, req.query.limit);
+
+    const posts = await Post.find(baseCondition)
+      .populate({
+        path: "author",
+        select: "username",
+      })
+      .sort(sortOptions)
+      .select(fieldSelection)
+      .skip(skip)
+      .limit(limit);
 
     // Get total count
-    const totalPosts = await Post.countDocuments({ author: userId });
+    const totalPosts = await Post.countDocuments(baseCondition);
 
     res.status(200).json({
       status: "success",
