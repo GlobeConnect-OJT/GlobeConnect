@@ -14,6 +14,7 @@ const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const favoritesRoutes = require("./routes/favoritesRoutes");
 
 // Import error handler middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -50,6 +51,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/history", historyRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/favorites", favoritesRoutes);
 
 // Base route
 app.get("/", (req, res) => {

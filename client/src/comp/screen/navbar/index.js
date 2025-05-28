@@ -84,6 +84,10 @@ const NavBarView = (props) => {
 		navigate('/profile');
 	};
 
+	const handleFavoritesClick = () => {
+		navigate('/favorites');
+	};
+
 	const handleLogout = async () => {
 		try {
 			await authLogout();
@@ -184,6 +188,7 @@ const NavBarView = (props) => {
 									{user ? (
 										<>
 											<MenuItem onClick={handleProfileClick}>Profile</MenuItem>
+											<MenuItem onClick={handleFavoritesClick}>Favorites</MenuItem>
 											<MenuItem onClick={onPressAddPost}>Add Post</MenuItem>
 											<MenuItem onClick={handleLogout}>Logout</MenuItem>
 										</>
@@ -213,6 +218,13 @@ const NavBarView = (props) => {
 										mr={2}
 									>
 										Add Post
+									</Button>
+									<Button
+										variant="ghost"
+										onClick={handleFavoritesClick}
+										mr={2}
+									>
+										Favorites
 									</Button>
 									<Tooltip label="Profile">
 										<IconButton

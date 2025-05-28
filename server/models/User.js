@@ -29,6 +29,26 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "super-admin"],
       default: "user",
     },
+    favorites: [
+      {
+        latitude: {
+          type: Number,
+          required: true,
+        },
+        longitude: {
+          type: Number,
+          required: true,
+        },
+        city: String,
+        state: String,
+        country: String,
+        displayName: String,
+        addedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     createdAt: {
       type: Date,
       default: Date.now,

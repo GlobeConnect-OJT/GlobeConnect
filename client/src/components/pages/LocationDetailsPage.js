@@ -21,16 +21,32 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
+  IconButton,
+  useToast,
+  Tooltip,
 } from "@chakra-ui/react";
+import { StarIcon } from "@chakra-ui/icons";
 import { useParams } from "react-router-dom";
 import NavBarView from "../../comp/screen/navbar";
 import { getLocationFromCoordinates } from "../../comp/utils/geocoding";
 import { useLocationHistory } from "../../hooks/useLocationHistory";
+import { useAuth } from "../../context/AuthContext";
+import {
+  addToFavorites,
+  removeFromFavorites,
+  checkFavorite,
+} from "../../services/favoritesService";
 
 const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const { lat, lng } = useParams();
   const [locationInfo, setLocationInfo] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteId, setFavoriteId] = useState(null);
+  const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
+  
+  const { user } = useAuth();
+  const toast = useToast();
 
   // Fetch location info
   useEffect(() => {
@@ -54,6 +70,28 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
     fetchLocationInfo();
   }, [lat, lng, setIsMasterAppLoading]);
+
+  // Check if location is in favorites when user is logged in
+  useEffect(() => {
+    const checkIfFavorite = async () => {
+      if (user && lat && lng) {
+        try {
+          setIsLoadingFavorite(true);
+          const response = await checkFavorite(parseFloat(lat), parseFloat(lng));
+          setIsFavorite(response.data.isFavorite);
+          if (response.data.favorite) {
+            setFavoriteId(response.data.favorite._id);
+          }
+        } catch (error) {
+          console.error("Error checking favorite status:", error);
+        } finally {
+          setIsLoadingFavorite(false);
+        }
+      }
+    };
+
+    checkIfFavorite();
+  }, [user, lat, lng]);
 
   // Function to fetch posts
   const fetchPosts = async (stateName) => {
@@ -80,6 +118,81 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     } catch (error) {
       console.error("Error fetching posts:", error);
       setPosts([]);
+    }
+  };
+
+  // Handle adding/removing from favorites
+  const handleFavoriteToggle = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to add locations to favorites",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!locationInfo) {
+      toast({
+        title: "Error",
+        description: "Location information not available",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      setIsLoadingFavorite(true);
+
+      if (isFavorite && favoriteId) {
+        // Remove from favorites
+        await removeFromFavorites(favoriteId);
+        setIsFavorite(false);
+        setFavoriteId(null);
+        toast({
+          title: "Removed from favorites",
+          description: "Location has been removed from your favorites",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        // Add to favorites
+        const favoriteData = {
+          latitude: parseFloat(lat),
+          longitude: parseFloat(lng),
+          city: locationInfo.city,
+          state: locationInfo.state,
+          country: locationInfo.country,
+          displayName: locationInfo.displayName,
+        };
+
+        const response = await addToFavorites(favoriteData);
+        setIsFavorite(true);
+        setFavoriteId(response.data.favorite._id);
+        toast({
+          title: "Added to favorites",
+          description: "Location has been added to your favorites",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to update favorites",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoadingFavorite(false);
     }
   };
 
@@ -151,12 +264,33 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         >
           <Container maxW="container.xl">
             <Flex direction="column" align="center">
-              <Heading size="lg" mb={2}>
-                {locationInfo?.city ||
-                  locationInfo?.state ||
-                  locationInfo?.country ||
-                  "Location"}
-              </Heading>
+              <Flex align="center" gap={4} mb={2}>
+                <Heading size="lg">
+                  {locationInfo?.city ||
+                    locationInfo?.state ||
+                    locationInfo?.country ||
+                    "Location"}
+                </Heading>
+                {user && (
+                  <Tooltip
+                    label={
+                      isFavorite ? "Remove from favorites" : "Add to favorites"
+                    }
+                  >
+                    <IconButton
+                      icon={<StarIcon />}
+                      colorScheme={isFavorite ? "yellow" : "gray"}
+                      variant={isFavorite ? "solid" : "outline"}
+                      size="md"
+                      isLoading={isLoadingFavorite}
+                      onClick={handleFavoriteToggle}
+                      aria-label={
+                        isFavorite ? "Remove from favorites" : "Add to favorites"
+                      }
+                    />
+                  </Tooltip>
+                )}
+              </Flex>
               <Text
                 fontSize="md"
                 color={useColorModeValue("gray.600", "gray.400")}
