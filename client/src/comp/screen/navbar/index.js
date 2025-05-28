@@ -24,6 +24,7 @@ import {
 	SunIcon,
 	SettingsIcon,
 	AddIcon,
+	RepeatIcon,
 } from "@chakra-ui/icons";
 
 import { FaGlobeAfrica } from "react-icons/fa";
@@ -49,7 +50,7 @@ import AppManager from "../../utils/AppManager";
 const { MasterDrawerMenuType, MasterDrawerMenuConfig } = Constants;
 
 const NavBarView = (props) => {
-	const { userConfig } = props;
+	const { userConfig, setUserConfig } = props;
 
 	const [state, setState] = useState({
 		selectedMenuType:
@@ -111,6 +112,14 @@ const NavBarView = (props) => {
 
 	const onPressAddPost = () => {
 		setIsCreatePostOpen(true);
+	};
+
+	const toggleViewMode = () => {
+		const newViewMode = userConfig.viewMode === 'globe' ? 'map' : 'globe';
+		setUserConfig({
+			...userConfig,
+			viewMode: newViewMode
+		});
 	};
 
 	/*  Server Request Methods  */
@@ -175,7 +184,7 @@ const NavBarView = (props) => {
 									variant="outline"
 									size="sm"
 								/>
-								<MenuList>
+								<MenuList zIndex={1000}>
 									{user ? (
 										<>
 											<MenuItem onClick={onPressAddPost}>Add Post</MenuItem>
@@ -187,6 +196,9 @@ const NavBarView = (props) => {
 											<MenuItem onClick={() => setIsRegisterOpen(true)}>Register</MenuItem>
 										</>
 									)}
+									<MenuItem onClick={toggleViewMode}>
+										Switch to {userConfig.viewMode === 'globe' ? 'Map' : 'Globe'} View
+									</MenuItem>
 									<MenuItem onClick={toggleColorMode}>
 										{colorMode === "light" ? "Dark Mode" : "Light Mode"}
 									</MenuItem>
@@ -198,61 +210,55 @@ const NavBarView = (props) => {
 						// Desktop layout
 						<Flex>
 							{user ? (
-								<>
-									<Button
-										variant="ghost"
-										onClick={handleLogout}
-										mr={2}
-									>
-										Logout
-									</Button>
+								<Stack direction="row" spacing={4} mr={4}>
 									<Button
 										leftIcon={<AddIcon />}
+										colorScheme="teal"
 										variant="solid"
-										colorScheme="blue"
 										onClick={onPressAddPost}
-										mr={2}
 									>
 										Add Post
 									</Button>
-								</>
+									<Button onClick={handleLogout}>Logout</Button>
+								</Stack>
 							) : (
-								<>
+								<Stack direction="row" spacing={4} mr={4}>
+									<Button onClick={() => setIsLoginOpen(true)}>Login</Button>
 									<Button
-										variant="ghost"
-										onClick={() => setIsLoginOpen(true)}
-										mr={2}
-									>
-										Login
-									</Button>
-									<Button
-										variant="ghost"
+										colorScheme="teal"
+										variant="solid"
 										onClick={() => setIsRegisterOpen(true)}
-										mr={2}
 									>
 										Register
 									</Button>
-								</>
+								</Stack>
 							)}
-							<Tooltip label="Change Theme">
+							<Tooltip label={`Switch to ${userConfig.viewMode === 'globe' ? 'Map' : 'Globe'} View`}>
 								<IconButton
-									variant="link"
+									aria-label="Toggle View Mode"
+									icon={<RepeatIcon />}
+									onClick={toggleViewMode}
+									me={3}
+								/>
+							</Tooltip>
+							<Tooltip label="Toggle Dark/Light Mode">
+								<IconButton
+									aria-label="Toggle Dark/Light Mode"
 									icon={
 										colorMode === "light" ? (
-											<MoonIcon boxSize={"20px"} />
+											<MoonIcon />
 										) : (
-											<SunIcon boxSize={"20px"} />
+											<SunIcon />
 										)
 									}
 									onClick={toggleColorMode}
+									me={3}
 								/>
 							</Tooltip>
 							<Tooltip label="Settings">
 								<IconButton
-									ms={3}
-									me={1}
-									variant="link"
-									icon={<SettingsIcon boxSize={"20px"} />}
+									aria-label="Settings"
+									icon={<SettingsIcon />}
 									onClick={onPressSettings}
 								/>
 							</Tooltip>
@@ -288,9 +294,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
 	return {
-		setUserConfig: (userConfig) =>
-			dispatch(Actions.setUserConfig(userConfig)),
-		setUserPref: (userPref) => dispatch(Actions.setUserPref(userPref)),
+		setUserConfig: (userConfig) => dispatch(Actions.setUserConfig(userConfig)),
 	};
 };
 

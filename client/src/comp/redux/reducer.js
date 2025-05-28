@@ -17,6 +17,7 @@ const {
 const initial = {
 	userConfig: {
 		selectedMenuType: MasterDrawerMenuType.Search,
+		viewMode: 'globe', // 'globe' or 'map'
 	},
 	userPref: {
 		appSettings: {

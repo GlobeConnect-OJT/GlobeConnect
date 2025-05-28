@@ -16,6 +16,7 @@
 		"d3-shape": "^3.1.0",
 		"framer-motion": "^7.10.3",
 		"geolib": "^3.3.3",
+		"leaflet-geosearch": "^4.2.0",
 		"lodash": "^4.17.21",
 		"moment-timezone": "^0.5.34",
 		"react": "^18.2.0",
