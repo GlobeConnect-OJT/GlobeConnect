@@ -27,6 +27,8 @@ const connectDB = require("./config/db");
 
 // Initialize express app
 const app = express();
+
+// Create HTTP server
 const server = http.createServer(app);
 
 // Connect to database

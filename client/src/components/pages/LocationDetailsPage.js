@@ -21,8 +21,10 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  IconButton,
+  Button,
+  useDisclosure,
   useToast,
+  IconButton,
   Tooltip,
 } from "@chakra-ui/react";
 import { StarIcon } from "@chakra-ui/icons";
@@ -31,6 +33,10 @@ import NavBarView from "../../comp/screen/navbar";
 import { getLocationFromCoordinates } from "../../comp/utils/geocoding";
 import { useLocationHistory } from "../../hooks/useLocationHistory";
 import { useAuth } from "../../context/AuthContext";
+import KanbanBoard from "../../components/posts/KanbanBoard";
+import CreatePostModal from "../../components/posts/CreatePostModal";
+import { initSocket } from "../../utils/socket";
+import { FaPlus } from "react-icons/fa";
 import {
   addToFavorites,
   removeFromFavorites,
@@ -41,20 +47,58 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const { lat, lng } = useParams();
   const [locationInfo, setLocationInfo] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteId, setFavoriteId] = useState(null);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
   
-  const { user } = useAuth();
+  const authContext = useAuth();
+  const user = authContext?.user || null;
+  const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure();
   const toast = useToast();
+
+  // Initialize socket connection
+  useEffect(() => {
+    // Initialize socket connection when component mounts
+    const socket = initSocket();
+    
+    // Listen for post updates
+    socket.on('post-update', (updatedPost) => {
+      setPosts(prevPosts => {
+        return prevPosts.map(post => {
+          if (post._id === updatedPost._id) {
+            return updatedPost;
+          }
+          return post;
+        });
+      });
+    });
+    
+    return () => {
+      // Clean up socket listeners when component unmounts
+      socket.off('post-update');
+    };
+  }, []);
 
   // Fetch location info
   useEffect(() => {
     const fetchLocationInfo = async () => {
+      // Validate coordinates
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lng);
+      
+      if (isNaN(latitude) || isNaN(longitude)) {
+        console.error("Invalid coordinates:", { lat, lng });
+        setIsMasterAppLoading(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
       try {
         const data = await getLocationFromCoordinates({
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lng),
+          latitude,
+          longitude,
         });
         setLocationInfo(data);
         if (data.state) {
@@ -62,9 +106,11 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         }
         // Set loading to false after everything is loaded
         setIsMasterAppLoading(false);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching location:", error);
         setIsMasterAppLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -95,6 +141,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
   // Function to fetch posts
   const fetchPosts = async (stateName) => {
+    setIsLoading(true);
     try {
       const response = await fetch(
         `http://localhost:5000/api/posts/state/${encodeURIComponent(stateName)}`
@@ -118,7 +165,15 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     } catch (error) {
       console.error("Error fetching posts:", error);
       setPosts([]);
+    } finally {
+      setIsLoading(false);
     }
+  };
+  
+  // Handle creating a new post
+  const handleCreatePost = () => {
+    // Open create post modal
+    onCreateModalOpen();
   };
 
   // Handle adding/removing from favorites
@@ -162,9 +217,23 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         });
       } else {
         // Add to favorites
+        const latitude = parseFloat(lat);
+        const longitude = parseFloat(lng);
+        
+        if (isNaN(latitude) || isNaN(longitude)) {
+          toast({
+            title: "Error",
+            description: "Invalid location coordinates",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+
         const favoriteData = {
-          latitude: parseFloat(lat),
-          longitude: parseFloat(lng),
+          latitude,
+          longitude,
           city: locationInfo.city,
           state: locationInfo.state,
           country: locationInfo.country,
@@ -209,42 +278,26 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const tabBg = useColorModeValue("gray.100", "gray.700");
   const activeTabBg = useColorModeValue("white", "gray.800");
 
-  // Post card component
-  const PostCard = ({ post }) => (
-    <Box
-      p={4}
-      borderWidth="1px"
-      borderRadius="md"
-      borderColor={borderColor}
-      _hover={{ boxShadow: "sm" }}
-      transition="all 0.2s"
-      mb={4}
-    >
-      <Text fontSize="lg" fontWeight="medium" mb={2}>
-        {post.title}
-      </Text>
-      <Text color={useColorModeValue("gray.600", "gray.400")} mb={3}>
-        {post.description}
-      </Text>
-      {post.images && post.images.length > 0 && (
-        <Image
-          src={post.images[0]}
-          alt={post.title}
-          borderRadius="md"
-          maxH="200px"
-          objectFit="cover"
-        />
-      )}
-      <Flex mt={2} justify="space-between" align="center">
-        <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
-          By {post.author?.username || "Unknown"}
-        </Text>
-        <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
-          {new Date(post.createdAt).toLocaleDateString()}
-        </Text>
-      </Flex>
-    </Box>
-  );
+  // Refresh posts data
+  const refreshPosts = async () => {
+    if (locationInfo?.state) {
+      await fetchPosts(locationInfo.state.toLowerCase());
+    }
+  };
+
+  // Handle post creation success
+  const handlePostCreated = (newPost) => {
+    // Add the new post to the posts array
+    setPosts(prevPosts => [newPost, ...prevPosts]);
+    
+    toast({
+      title: "Post created",
+      description: "Your post has been created successfully",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
 
   return (
     <Box
@@ -254,6 +307,20 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       bg={useColorModeValue("gray.50", "gray.900")}
     >
       <NavBarView />
+      
+      {/* Create Post Modal */}
+      <CreatePostModal 
+        isOpen={isCreateModalOpen} 
+        onClose={onCreateModalClose} 
+        locationInfo={{
+          city: locationInfo?.city,
+          state: locationInfo?.state,
+          country: locationInfo?.country,
+          latitude: !isNaN(parseFloat(lat)) ? parseFloat(lat) : 0,
+          longitude: !isNaN(parseFloat(lng)) ? parseFloat(lng) : 0
+        }}
+        onPostCreated={handlePostCreated}
+      />
       <Flex direction="column" h="calc(100vh - 64px)">
         <Box
           py={6}
@@ -347,26 +414,11 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
                       },
                     }}
                   >
-                    <VStack spacing={4} align="stretch" pb={4}>
-                      {posts.length > 0 ? (
-                        posts.map((post) => <PostCard key={post._id} post={post} />)
-                      ) : (
-                        <Flex
-                          direction="column"
-                          align="center"
-                          justify="center"
-                          py={10}
-                          bg={bgColor}
-                          borderRadius="lg"
-                          borderWidth="1px"
-                          borderColor={borderColor}
-                        >
-                          <Text color={useColorModeValue("gray.600", "gray.400")}>
-                            No posts found for this location.
-                          </Text>
-                        </Flex>
-                      )}
-                    </VStack>
+                    <KanbanBoard 
+                      posts={posts} 
+                      isLoading={isLoading} 
+                      onCreatePost={user ? handleCreatePost : undefined}
+                    />
                   </Box>
                 </TabPanel>
 
