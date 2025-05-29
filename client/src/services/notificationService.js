@@ -14,6 +14,8 @@ const createAuthenticatedRequest = () => {
   return {
     headers: {
       Authorization: `Bearer ${token}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
     },
   };
 };
@@ -23,11 +25,12 @@ export const notificationService = {
   getNotifications: async (page = 1, limit = 20) => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/notifications?page=${page}&limit=${limit}`,
+        `${API_BASE_URL}/api/notifications?page=${page}&limit=${limit}`,
         createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
+      console.error("Error fetching notifications:", error);
       throw error.response?.data || error;
     }
   },
@@ -36,11 +39,12 @@ export const notificationService = {
   getUnreadCount: async () => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/notifications/unread-count`,
+        `${API_BASE_URL}/api/notifications/unread-count`,
         createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
+      console.error("Error fetching unread count:", error);
       throw error.response?.data || error;
     }
   },
@@ -49,12 +53,13 @@ export const notificationService = {
   markAsRead: async (notificationId) => {
     try {
       const response = await axios.patch(
-        `${API_BASE_URL}/notifications/${notificationId}/read`,
+        `${API_BASE_URL}/api/notifications/${notificationId}/read`,
         {},
         createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
+      console.error("Error marking notification as read:", error);
       throw error.response?.data || error;
     }
   },
@@ -63,12 +68,13 @@ export const notificationService = {
   markAllAsRead: async () => {
     try {
       const response = await axios.patch(
-        `${API_BASE_URL}/notifications/mark-all-read`,
+        `${API_BASE_URL}/api/notifications/mark-all-read`,
         {},
         createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
+      console.error("Error marking all notifications as read:", error);
       throw error.response?.data || error;
     }
   },
@@ -77,11 +83,12 @@ export const notificationService = {
   deleteNotification: async (notificationId) => {
     try {
       const response = await axios.delete(
-        `${API_BASE_URL}/notifications/${notificationId}`,
+        `${API_BASE_URL}/api/notifications/${notificationId}`,
         createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
+      console.error("Error deleting notification:", error);
       throw error.response?.data || error;
     }
   },

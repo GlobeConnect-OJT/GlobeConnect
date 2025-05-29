@@ -24,8 +24,7 @@ export const NotificationProvider = ({ children }) => {
   const { user } = useAuth();
   const toast = useToast();
 
-  const API_BASE_URL =
-    process.env.REACT_APP_API_URL;
+  const API_BASE_URL = process.env.REACT_APP_API_URL;
 
   // Fetch notifications from server
   const fetchNotifications = async () => {
@@ -39,9 +38,11 @@ export const NotificationProvider = ({ children }) => {
         token ? "Present" : "Missing",
       );
 
-      const response = await axios.get(`${API_BASE_URL}/notifications`, {
+      const response = await axios.get(`${API_BASE_URL}/api/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
       });
 
@@ -53,6 +54,13 @@ export const NotificationProvider = ({ children }) => {
     } catch (error) {
       console.error("Error fetching notifications:", error);
       console.error("Error response:", error.response?.data);
+      toast({
+        title: "Error",
+        description: "Failed to fetch notifications",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setLoading(false);
     }
@@ -70,10 +78,12 @@ export const NotificationProvider = ({ children }) => {
       );
 
       const response = await axios.get(
-        `${API_BASE_URL}/notifications/unread-count`,
+        `${API_BASE_URL}/api/notifications/unread-count`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           },
         },
       );
@@ -94,11 +104,13 @@ export const NotificationProvider = ({ children }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `${API_BASE_URL}/notifications/${notificationId}/read`,
+        `${API_BASE_URL}/api/notifications/${notificationId}/read`,
         {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           },
         },
       );
@@ -114,6 +126,13 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Error marking notification as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark notification as read",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -122,11 +141,13 @@ export const NotificationProvider = ({ children }) => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `${API_BASE_URL}/notifications/mark-all-read`,
+        `${API_BASE_URL}/api/notifications/mark-all-read`,
         {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
           },
         },
       );
@@ -138,6 +159,13 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(0);
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark all notifications as read",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
@@ -145,9 +173,11 @@ export const NotificationProvider = ({ children }) => {
   const deleteNotification = async (notificationId) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
+      await axios.delete(`${API_BASE_URL}/api/notifications/${notificationId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
       });
 
@@ -165,6 +195,13 @@ export const NotificationProvider = ({ children }) => {
       }
     } catch (error) {
       console.error("Error deleting notification:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete notification",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
