@@ -1,21 +1,14 @@
 import React, { Fragment, useState, useEffect, useRef } from "react";
-
 import { Flex } from "@chakra-ui/react";
-
 import * as topojson from "topojson-client";
 import versor from "versor";
 import * as d3 from "d3";
 import SunCalc from "suncalc";
-
 import "./index.css";
-
 import { connect } from "react-redux";
-
 import lodash from "lodash";
-
 import Actions from "../../redux/action";
 import Constants from "../../utils/Constants";
-
 import {
   getVisibility,
   polygonContains,
@@ -23,14 +16,12 @@ import {
   fillCity,
   stroke,
 } from "./globeutils";
-
 import { useNavigate } from "react-router-dom";
 
 const { MasterDrawerMenuType } = Constants;
 
 const MasterGlobeView = (props) => {
   const { userConfig, userPref } = props;
-
   const navigate = useNavigate();
 
   const [state, setState] = useState({
@@ -40,6 +31,7 @@ const MasterGlobeView = (props) => {
     zoomLevel: 1,
     showBoundaries: true,
     showLabels: true,
+    isMobile: false,
   });
 
   const updateState = (data) =>
@@ -55,20 +47,27 @@ const MasterGlobeView = (props) => {
   const elementRefObj = useRef({});
   const pathRefObj = useRef({});
 
+  // Enhanced mobile detection
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) || window.innerWidth < 768;
+  };
+
   const suncalcOptionObj = useRef({
     tickDur: 400,
     shadowOpacity: 0.16,
     lightsOpacity: 0.7,
     sunOpacity: 0.3,
-    precisionLat: 1, // How many latitudinal degrees per point when checking solar position.
-    precisionLng: 10, // How may longitudial degrees per sunrise / sunset path point.
+    precisionLat: 1,
+    precisionLng: 10,
     mapWidth: 1100,
     mapHeight: 550,
-    refreshMap: true, // Periodically redraw map to keep current time
-    refreshMapInterval: 60000, // Update interval
-    bgColorLeft: "#0000ff", // Vibrant blue for gradient left side
-    bgColorRight: "#ff00aa", // Vibrant pink for gradient right side
-    lightsColor: "#ffff00", // Bright yellow for city lights
+    refreshMap: true,
+    refreshMapInterval: 60000,
+    bgColorLeft: "#0000ff",
+    bgColorRight: "#ff00aa",
+    lightsColor: "#ffff00",
   });
 
   const updateGlobeData = (data) =>
@@ -89,11 +88,45 @@ const MasterGlobeView = (props) => {
       ...data,
     });
 
-  /*  Life-cycles Methods */
+  // Enhanced pointer event handler for mobile compatibility
+  const getPointerPosition = (event, element) => {
+    let clientX, clientY;
+    
+    if (event.touches && event.touches.length > 0) {
+      // Touch event
+      clientX = event.touches[0].clientX;
+      clientY = event.touches[0].clientY;
+    } else if (event.changedTouches && event.changedTouches.length > 0) {
+      // Touch end event
+      clientX = event.changedTouches[0].clientX;
+      clientY = event.changedTouches[0].clientY;
+    } else {
+      // Mouse event
+      return d3.pointer(event, element);
+    }
 
+    const rect = element.getBoundingClientRect();
+    return [clientX - rect.left, clientY - rect.top];
+  };
+
+  /*  Life-cycles Methods */
   useEffect(() => {
+    // Detect mobile device
+    updateState({ isMobile: isMobileDevice() });
+    
+    // Add viewport meta tag for mobile if not present
+    if (isMobileDevice() && !document.querySelector('meta[name="viewport"]')) {
+      const viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.getElementsByTagName('head')[0].appendChild(viewport);
+    }
+
     initData();
-    return () => {};
+    return () => {
+      // Cleanup event listeners
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   useEffect(() => {
@@ -127,8 +160,14 @@ const MasterGlobeView = (props) => {
     }
   }, [userConfig]);
 
-  /*  Public Interface Methods */
+  // Enhanced resize handler
+  const handleResize = lodash.debounce(() => {
+    updateState({ isMobile: isMobileDevice() });
+    initDomElements();
+    scale();
+  }, 250);
 
+  /*  Public Interface Methods */
   const initData = () => {
     clearDomElements();
 
@@ -146,46 +185,39 @@ const MasterGlobeView = (props) => {
       });
     }
 
-    // Initialize zoom controls
-    const zoom = d3
-      .zoom()
-      .scaleExtent([0.5, 8])
-      .on("zoom", (event) => {
-        updateState({ zoomLevel: event.transform.k });
-        scale();
-      });
+    const isMobile = isMobileDevice();
+    
+    // Enhanced zoom configuration for mobile
+    const zoomConfig = isMobile 
+      ? { scaleExtent: [0.3, 4], duration: 300 }
+      : { scaleExtent: [0.5, 8], duration: 200 };
 
     globeDataObj.current = {
       ...globeDataObj.current,
-      scaleFactor: 0.9,
-      minZoom: 0.5,
-      maxZoom: 8,
+      scaleFactor: isMobile ? 0.7 : 0.9,
+      minZoom: zoomConfig.scaleExtent[0],
+      maxZoom: zoomConfig.scaleExtent[1],
+      isMobile: isMobile,
       water: {
         type: "Sphere",
       },
-
       angles: {
         x: -20,
         y: 40,
         z: 0,
       },
-
       v0: null,
       r0: null,
       q0: null,
-
       width: containerRef.current?.offsetWidth,
       height: containerRef.current?.offsetHeight,
-
       currentCountry: null,
-
       textGroup: null,
       graticuleGroup: null,
       markerGroup: null,
       landGroup: null,
       dayNightGroup: null,
       cityGroup: null,
-
       isLoadedMap: false,
       enableDayNightMode: userPref?.appSettings?.enableDayNightMode ?? true,
       isDragStop: true,
@@ -198,24 +230,25 @@ const MasterGlobeView = (props) => {
       ],
       markerLineArray: [],
       markerPolygonArray: [],
-
-      markerSize: 32,
+      markerSize: isMobile ? 24 : 32,
       selectedMarkerID: null,
       transform: d3.zoomIdentity,
-
-      colorWater: "#359faf", // Deep blue base for the water
-      colorLand: "#006400", // Vibrant magenta for land masses
-      colorGraticule: "#ffff00", // Bright yellow for grid lines
-      colorCountry: "#00ffff88", // Cyan with transparency for country outlines
-      colorPolygon: "#ff880088", // Orange with transparency for polygons
-      colorBoundaries: "#00000088", // Black with transparency for boundaries
-      colorLabels: "#ffffff", // White for labels
-
+      colorWater: "#359faf",
+      colorLand: "#006400",
+      colorGraticule: "#ffff00",
+      colorCountry: "#00ffff88",
+      colorPolygon: "#ff880088",
+      colorBoundaries: "#00000088",
+      colorLabels: "#ffffff",
       selectedCounytryID: null,
       userCountryID: null,
-
       canvas: d3.select(canvasRef.current),
       canvasOp: d3.select(canvasOpRef.current),
+      
+      // Touch tracking for mobile
+      lastTouchDistance: 0,
+      touchStartTime: 0,
+      isMultiTouch: false,
     };
 
     const { canvas, canvasOp, width, height } = globeDataObj.current;
@@ -223,7 +256,6 @@ const MasterGlobeView = (props) => {
     elementRefObj.current = {
       context: canvas.node().getContext("2d"),
       contextOp: canvasOp.node().getContext("2d"),
-
       projection: d3.geoOrthographic().precision(0.1).clipAngle(90),
       graticule: d3.geoGraticule10(),
     };
@@ -242,7 +274,6 @@ const MasterGlobeView = (props) => {
       let countries = topojson.feature(world, world?.objects?.countries);
 
       let names = {};
-
       countryList.forEach((d, i) => {
         names[d["country-code"]] = d.name;
       });
@@ -255,54 +286,195 @@ const MasterGlobeView = (props) => {
         names: names,
       });
 
-      window.addEventListener("resize", () => {
-        updateState({});
-        initDomElements();
-        scale();
-      });
-
+      window.addEventListener("resize", handleResize);
       initDomElements();
       scale();
     });
 
     setAngles();
+    setupCanvasEvents();
+  };
 
-    canvas
-      .call(
-        d3
-          .drag()
-          .on("start", dragstarted)
-          .on("drag", dragged)
-          .on("end", dragended),
-      )
-      .on("click", mouseClicked)
-      .on("mousemove", mousemove)
-      .call(
-        d3
-          .zoom()
-          .scaleExtent([0.8, 8])
-          .translateExtent([
-            [0, 0],
-            [width, height],
-          ])
-          .on("zoom", (event) => {
-            let { scaleFactor } = globeDataObj.current;
+  // Enhanced canvas event setup with mobile support
+  const setupCanvasEvents = () => {
+    const { canvas, width, height, isMobile } = globeDataObj.current;
+    const canvasNode = canvas.node();
+    
+    // Remove existing listeners
+    canvas.on(".drag", null);
+    canvas.on(".zoom", null);
+    canvas.on("click", null);
+    canvas.on("mousemove", null);
 
-            scaleFactor = event.transform.k;
+    if (isMobile) {
+      // Mobile touch events
+      canvasNode.addEventListener("touchstart", handleTouchStart, { passive: false });
+      canvasNode.addEventListener("touchmove", handleTouchMove, { passive: false });
+      canvasNode.addEventListener("touchend", handleTouchEnd, { passive: false });
+      canvasNode.addEventListener("click", handleClick, { passive: true });
+      
+      // Prevent default touch behaviors
+      canvasNode.style.touchAction = "none";
+    } else {
+      // Desktop mouse events
+      canvas
+        .call(
+          d3
+            .drag()
+            .on("start", dragstarted)
+            .on("drag", dragged)
+            .on("end", dragended)
+        )
+        .on("click", mouseClicked)
+        .on("mousemove", mousemove)
+        .call(
+          d3
+            .zoom()
+            .scaleExtent([0.8, 8])
+            .translateExtent([
+              [0, 0],
+              [width, height],
+            ])
+            .on("zoom", handleZoom)
+        );
+    }
+  };
 
-            updateGlobeData({
-              transform: event.transform,
-              scaleFactor: scaleFactor,
-            });
+  // Enhanced touch event handlers
+  const handleTouchStart = (event) => {
+    event.preventDefault();
+    
+    const { canvas } = globeDataObj.current;
+    const touches = event.touches;
+    
+    updateGlobeData({
+      touchStartTime: Date.now(),
+      isMultiTouch: touches.length > 1,
+    });
 
-            scale();
-          }),
+    if (touches.length === 1) {
+      // Single touch - start drag
+      const { projection } = elementRefObj.current;
+      const pointer = getPointerPosition(event, canvas.node());
+      const v0 = versor.cartesian(projection.invert(pointer));
+      const r0 = projection.rotate();
+      const q0 = versor(r0);
+
+      updateGlobeData({
+        v0: v0,
+        r0: r0,
+        q0: q0,
+      });
+    } else if (touches.length === 2) {
+      // Multi-touch - prepare for zoom
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+        Math.pow(touch2.clientY - touch1.clientY, 2)
       );
+      
+      updateGlobeData({
+        lastTouchDistance: distance,
+      });
+    }
+  };
+
+  const handleTouchMove = (event) => {
+    event.preventDefault();
+    
+    const { canvas, v0, r0, q0, lastTouchDistance, isMultiTouch } = globeDataObj.current;
+    const { projection } = elementRefObj.current;
+    const touches = event.touches;
+
+    if (touches.length === 1 && !isMultiTouch) {
+      // Single touch drag
+      if (v0 && r0 && q0) {
+        const pointer = getPointerPosition(event, canvas.node());
+        const v1 = versor.cartesian(projection.rotate(r0).invert(pointer));
+        const q1 = versor.multiply(q0, versor.delta(v0, v1));
+        const r1 = versor.rotation(q1);
+        r1[2] = 0; // Prevent roll
+        
+        projection.rotate(r1);
+        updateElementRef({ projection: projection });
+        window.requestAnimationFrame(render);
+      }
+    } else if (touches.length === 2) {
+      // Multi-touch zoom
+      const touch1 = touches[0];
+      const touch2 = touches[1];
+      const currentDistance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) +
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+
+      if (lastTouchDistance > 0) {
+        const scale = currentDistance / lastTouchDistance;
+        const { scaleFactor, minZoom, maxZoom } = globeDataObj.current;
+        const newScale = Math.min(Math.max(scaleFactor * scale, minZoom), maxZoom);
+        
+        updateGlobeData({
+          scaleFactor: newScale,
+          lastTouchDistance: currentDistance,
+        });
+        
+        scale();
+      }
+    }
+  };
+
+  const handleTouchEnd = (event) => {
+    event.preventDefault();
+    
+    const { touchStartTime, isMultiTouch } = globeDataObj.current;
+    const touchDuration = Date.now() - touchStartTime;
+    
+    // Reset touch state
+    updateGlobeData({
+      v0: null,
+      r0: null,
+      q0: null,
+      lastTouchDistance: 0,
+      isMultiTouch: false,
+    });
+
+    // Handle tap (short touch on single finger)
+    if (!isMultiTouch && touchDuration < 300 && event.changedTouches.length === 1) {
+      setTimeout(() => {
+        handleClick(event);
+      }, 50); // Small delay to prevent conflicts
+    }
+  };
+
+  const handleClick = (event) => {
+    const { canvas } = globeDataObj.current;
+    
+    // Create a synthetic event object for compatibility
+    const syntheticEvent = {
+      ...event,
+      target: canvas.node(),
+      currentTarget: canvas.node(),
+    };
+    
+    addClickedMarkerToFindCountry(syntheticEvent);
+  };
+
+  // Enhanced zoom handler
+  const handleZoom = (event) => {
+    let { scaleFactor } = globeDataObj.current;
+    scaleFactor = event.transform.k;
+
+    updateGlobeData({
+      transform: event.transform,
+      scaleFactor: scaleFactor,
+    });
+
+    scale();
   };
 
   const setAngles = () => {
     let { angles } = globeDataObj.current;
-
     let { projection } = elementRefObj.current;
 
     let rotation = projection.rotate();
@@ -370,8 +542,6 @@ const MasterGlobeView = (props) => {
   };
 
   const getPathString = (northSun) => {
-    const { width, height } = globeDataObj.current;
-
     let path = getPath(northSun);
 
     let geoJsonObj = {
@@ -388,8 +558,6 @@ const MasterGlobeView = (props) => {
     return geoJsonObj;
   };
 
-  /*  UI Events Methods   */
-
   const clearDomElements = () => {
     let { svg, svgMarker } = globeDataObj.current;
 
@@ -403,18 +571,15 @@ const MasterGlobeView = (props) => {
     updateGlobeData({
       svg: svg,
       svgMarker: svgMarker,
-
       graticuleGroup: null,
       landGroup: null,
       textGroup: null,
       markerGroup: null,
       dayNightGroup: null,
       cityGroup: null,
-
       markerArray: [],
       markerLineArray: [],
       markerPolygonArray: [],
-
       selectedMarkerID: null,
       selectedCounytryID: null,
       userCountryID: null,
@@ -427,39 +592,50 @@ const MasterGlobeView = (props) => {
     let {
       width,
       height,
-
       canvas,
       canvasOp,
-
       svg,
       svgMarker,
       graticuleGroup,
       colorGraticule,
-
       landGroup,
       textGroup,
       markerGroup,
       dayNightGroup,
       cityGroup,
-
       countries,
       names,
+      isMobile,
     } = globeDataObj.current;
 
     let { projection, graticule } = elementRefObj.current;
-
     let { path } = pathRefObj.current;
 
     width = containerRef.current?.offsetWidth;
     height = containerRef.current?.offsetHeight;
 
-    canvas.attr("width", width).attr("height", height);
-    canvasOp.attr("width", width).attr("height", height);
+    // Enhanced canvas setup for mobile
+    const pixelRatio = window.devicePixelRatio || 1;
+    const canvasWidth = width * (isMobile ? 1 : pixelRatio);
+    const canvasHeight = height * (isMobile ? 1 : pixelRatio);
+
+    canvas.attr("width", canvasWidth).attr("height", canvasHeight);
+    canvasOp.attr("width", canvasWidth).attr("height", canvasHeight);
+    
+    // Scale context for high DPI displays (but not on mobile to save performance)
+    if (!isMobile && pixelRatio > 1) {
+      const context = canvas.node().getContext("2d");
+      const contextOp = canvasOp.node().getContext("2d");
+      context.scale(pixelRatio, pixelRatio);
+      contextOp.scale(pixelRatio, pixelRatio);
+    }
+
+    canvas.style("width", width + "px").style("height", height + "px");
+    canvasOp.style("width", width + "px").style("height", height + "px");
 
     projection.fitSize([width, height]).translate([width / 2, height / 2]);
 
     svg.attr("width", width).attr("height", height);
-
     svgMarker.attr("width", width).attr("height", height);
 
     updateGlobeData({
@@ -471,13 +647,12 @@ const MasterGlobeView = (props) => {
       svgMarker: svgMarker,
     });
 
+    // Rest of the DOM initialization remains the same...
     svgMarker.selectAll("#maskPath").remove();
 
     let mask = svgMarker.append("clipPath");
     mask.attr("id", "maskPath");
-    mask.html(`
-            <rect width="${width}" height="${height}" x="0" y="0" />
-        `);
+    mask.html(`<rect width="${width}" height="${height}" x="0" y="0" />`);
 
     if (!graticuleGroup) {
       graticuleGroup = svg
@@ -489,7 +664,7 @@ const MasterGlobeView = (props) => {
         .append("path")
         .datum(graticule)
         .attr("d", path)
-        .attr("stroke-width", "1.5")
+        .attr("stroke-width", isMobile ? "1" : "1.5")
         .attr("stroke-dasharray", "5, 2")
         .attr("stroke", colorGraticule)
         .attr("fill", "transparent");
@@ -501,41 +676,16 @@ const MasterGlobeView = (props) => {
 
     if (!landGroup) {
       let defs = svg.append("defs");
-
       defs.html(`
-            <filter 
-                id='inset-shadow'>
-            <!-- Shadow offset -->
-                <feOffset
-                    dx='0'
-                    dy='0'/>
-                <!-- Shadow blur -->
-                <feGaussianBlur
-                    stdDeviation='15'
-                    result='offset-blur'/>
-            <!-- Invert drop shadow to make an inset shadow-->
-                <feComposite
-                    operator='out'
-                    in='SourceGraphic'
-                    in2='offset-blur'
-                    result='inverse'/>
-            <!-- Cut colour inside shadow -->
-                <feFlood
-                    flood-color='#000'
-                    flood-opacity='1'
-                    result='color'/>
-                <feComposite
-                    operator='in'
-                    in='color'
-                    in2='inverse'
-                    result='shadow'/>
-            <!-- Placing shadow over element -->
-                <feComposite
-                    operator='over'
-                    in='shadow'
-                    in2='SourceGraphic'/> 
-            </filter>
-        `);
+        <filter id='inset-shadow'>
+          <feOffset dx='0' dy='0'/>
+          <feGaussianBlur stdDeviation='15' result='offset-blur'/>
+          <feComposite operator='out' in='SourceGraphic' in2='offset-blur' result='inverse'/>
+          <feFlood flood-color='#000' flood-opacity='1' result='color'/>
+          <feComposite operator='in' in='color' in2='inverse' result='shadow'/>
+          <feComposite operator='over' in='shadow' in2='SourceGraphic'/> 
+        </filter>
+      `);
 
       landGroup = svg
         .append("g")
@@ -550,42 +700,30 @@ const MasterGlobeView = (props) => {
     if (!textGroup) {
       let defs = svg.append("defs");
       const value = 0.19;
-
+    
       defs.html(`
-            <filter 
-                id="blackOutlineEffect"
-                color-interpolation-filters="sRGB">
-                <feMorphology 
-                    in="SourceAlpha" 
-                    result="MORPH" 
-                    operator="dilate" 
-                    radius="2.0" />
-                <feColorMatrix 
-                    in="MORPH" 
-                    result="WHITENED" 
-                    type="matrix" 
-                    values="-1 0 0 0 ${value}, 0 -1 0 0 ${value}, 0 0 -1 0 ${value}, 0 0 0 1 0" />
-                <feMerge>
-                    <feMergeNode 
-                        in="WHITENED" />
-                    <feMergeNode 
-                        in="SourceGraphic" />
-                </feMerge>
-            </filter>
-        `);
-
+        <filter id="blackOutlineEffect" color-interpolation-filters="sRGB">
+          <feMorphology in="SourceAlpha" result="MORPH" operator="dilate" radius="2.0" />
+          <feColorMatrix in="MORPH" result="WHITENED" type="matrix" 
+            values="-1 0 0 0 ${value}, 0 -1 0 0 ${value}, 0 0 -1 0 0 ${value}, 0 0 0 1 0" />
+          <feMerge>
+            <feMergeNode in="WHITENED" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      `);
+    
       textGroup = svgMarker
         .append("g")
         .attr("id", "text")
         .attr("clip-path", "url(#maskPath)");
-
+    
       textGroup
         .selectAll("text")
         .data(countries?.features)
         .enter()
         .append("text")
         .attr("id", function (d) {
-          // console.log(d.id)
           return `id${parseInt(d?.id)}`;
         })
         .attr("fill", "#fff")
@@ -597,8 +735,9 @@ const MasterGlobeView = (props) => {
         })
         .attr("filter", "url(#blackOutlineEffect)")
         .attr("text-anchor", "middle")
-        .attr("font-size", "13.6px")
+        .attr("font-size", isMobile ? "11px" : "13.6px")
         .attr("font-family", "Verdana")
+        .attr("opacity", isMobile ? 0 : 1) // Hide on mobile, show on desktop
         .text(function (d) {
           return names[`${d.id}`];
         });
@@ -610,11 +749,9 @@ const MasterGlobeView = (props) => {
 
     if (!markerGroup) {
       markerGroup = svgMarker.append("g").attr("id", "marker");
-
       updateGlobeData({
         markerGroup: markerGroup,
       });
-
       reloadMarker();
     }
 
@@ -643,7 +780,6 @@ const MasterGlobeView = (props) => {
 
     if (!dayNightGroup) {
       dayNightGroup = svgMarker.append("g").attr("id", "dayNightG");
-
       updateGlobeData({
         dayNightGroup: dayNightGroup,
       });
@@ -651,7 +787,6 @@ const MasterGlobeView = (props) => {
 
     if (!cityGroup) {
       cityGroup = svgMarker.append("g").attr("id", "cityG");
-
       updateGlobeData({
         cityGroup: cityGroup,
       });
@@ -742,19 +877,19 @@ const MasterGlobeView = (props) => {
   };
 
   const scale = () => {
-    let { width, height, scaleFactor, minZoom, maxZoom } = globeDataObj.current;
-
+    let { width, height, scaleFactor, minZoom, maxZoom, isMobile } = globeDataObj.current;
     let { projection } = elementRefObj.current;
 
-    // Apply zoom constraints
     scaleFactor = Math.min(Math.max(scaleFactor, minZoom), maxZoom);
-
-    // Update zoom level state
     updateState({ zoomLevel: scaleFactor });
 
-    // Show/hide features based on zoom level
-    const showBoundaries = scaleFactor > 2;
-    const showLabels = scaleFactor > 3;
+    // Enhanced zoom level thresholds for mobile
+    const boundaryThreshold = isMobile ? 1.5 : 2;
+    const labelThreshold = isMobile ? 2.5 : 3;
+    
+    const showBoundaries = scaleFactor > boundaryThreshold;
+    const showLabels = scaleFactor > labelThreshold;
+    
     if (
       state.showBoundaries !== showBoundaries ||
       state.showLabels !== showLabels
