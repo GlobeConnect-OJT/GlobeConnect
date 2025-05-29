@@ -124,7 +124,7 @@ const adminController = {
 
       // Remove the comment
       post.comments = post.comments.filter(
-        (comment) => comment._id.toString() !== commentId
+        (comment) => comment._id.toString() !== commentId,
       );
 
       await post.save();
@@ -194,19 +194,19 @@ router.delete(
   "/posts/:id",
   protect,
   checkAdminRole,
-  adminController.deletePost
+  adminController.deletePost,
 );
 router.delete(
   "/comments/:commentId",
   protect,
   checkAdminRole,
-  adminController.deleteComment
+  adminController.deleteComment,
 );
 router.get(
   "/statistics",
   protect,
   checkAdminRole,
-  adminController.getStatistics
+  adminController.getStatistics,
 );
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   VStack,
@@ -13,29 +13,43 @@ import {
   Flex,
   useToast,
   Collapse,
-  Badge
-} from '@chakra-ui/react';
-import { FaTrash, FaReply, FaHeart, FaRegHeart, FaComment } from 'react-icons/fa';
-import { useAuth } from '../../context/AuthContext';
-import { formatDistanceToNow } from 'date-fns';
-import { joinPostRoom, leavePostRoom, getSocket } from '../../utils/socket';
-import axios from 'axios';
+  Badge,
+} from "@chakra-ui/react";
+import {
+  FaTrash,
+  FaReply,
+  FaHeart,
+  FaRegHeart,
+  FaComment,
+} from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
+import { formatDistanceToNow } from "date-fns";
+import { joinPostRoom, leavePostRoom, getSocket } from "../../utils/socket";
+import axios from "axios";
 
-const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpen, onToggle }) => {
+const API_BASE_URL = "http://localhost:5000/api";
+
+const CommentSection = ({
+  postId,
+  initialComments = [],
+  initialLikes = [],
+  isOpen,
+  onToggle,
+}) => {
   const [comments, setComments] = useState(initialComments);
   const [likes, setLikes] = useState(initialLikes);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user, token } = useAuth();
   const toast = useToast();
   const commentInputRef = useRef(null);
   const commentsEndRef = useRef(null);
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   // Scroll to bottom of comments when new ones are added
   const scrollToBottom = () => {
-    commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -52,31 +66,31 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
     joinPostRoom(postId);
 
     // Listen for new comments
-    socket.on('comment-added', (data) => {
+    socket.on("comment-added", (data) => {
       if (data.postId === postId) {
-        setComments(prevComments => [data.comment, ...prevComments]);
+        setComments((prevComments) => [data.comment, ...prevComments]);
         toast({
-          title: 'New comment',
-          description: 'Someone commented on this post',
-          status: 'info',
+          title: "New comment",
+          description: "Someone commented on this post",
+          status: "info",
           duration: 3000,
           isClosable: true,
-          position: 'bottom-right'
+          position: "bottom-right",
         });
       }
     });
 
     // Listen for deleted comments
-    socket.on('comment-deleted', (data) => {
+    socket.on("comment-deleted", (data) => {
       if (data.postId === postId) {
-        setComments(prevComments => 
-          prevComments.filter(comment => comment._id !== data.commentId)
+        setComments((prevComments) =>
+          prevComments.filter((comment) => comment._id !== data.commentId),
         );
       }
     });
 
     // Listen for like updates
-    socket.on('like-update', (data) => {
+    socket.on("like-update", (data) => {
       if (data.postId === postId) {
         setLikes(data.likes);
       }
@@ -84,9 +98,9 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
 
     return () => {
       leavePostRoom(postId);
-      socket.off('comment-added');
-      socket.off('comment-deleted');
-      socket.off('like-update');
+      socket.off("comment-added");
+      socket.off("comment-deleted");
+      socket.off("like-update");
     };
   }, [postId, isOpen, toast]);
 
@@ -99,26 +113,26 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
       setIsSubmitting(true);
       const config = {
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        }
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       };
 
       await axios.post(
-        `/api/posts/${postId}/comments`,
+        `${API_BASE_URL}/posts/${postId}/comments`,
         { text: newComment },
-        config
+        config,
       );
 
       // The comment will be added via socket.io
-      setNewComment('');
+      setNewComment("");
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to add comment',
-        status: 'error',
+        title: "Error",
+        description: error.response?.data?.message || "Failed to add comment",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
     } finally {
       setIsSubmitting(false);
@@ -130,23 +144,24 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
 
       await axios.delete(
-        `/api/posts/${postId}/comments/${commentId}`,
-        config
+        `${API_BASE_URL}/posts/${postId}/comments/${commentId}`,
+        config,
       );
 
       // The comment will be removed via socket.io
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete comment',
-        status: 'error',
+        title: "Error",
+        description:
+          error.response?.data?.message || "Failed to delete comment",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
     }
   };
@@ -156,33 +171,35 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
     try {
       const config = {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
 
-      await axios.post(`/api/posts/${postId}/like`, {}, config);
+      await axios.post(`${API_BASE_URL}/posts/${postId}/like`, {}, config);
       // Likes will be updated via socket.io
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to toggle like',
-        status: 'error',
+        title: "Error",
+        description: error.response?.data?.message || "Failed to toggle like",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
     }
   };
 
   // Check if current user has liked the post
-  const hasLiked = likes.some(like => like.user === user?._id);
+  const hasLiked = user
+    ? likes.some((like) => like.toString() === user._id)
+    : false;
 
   return (
     <Collapse in={isOpen} animateOpacity>
-      <Box 
-        p={4} 
-        bg={bgColor} 
-        borderRadius="md" 
-        borderWidth="1px" 
+      <Box
+        p={4}
+        bg={bgColor}
+        borderRadius="md"
+        borderWidth="1px"
         borderColor={borderColor}
         mt={2}
         boxShadow="sm"
@@ -191,13 +208,13 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
         <HStack mb={4} spacing={2}>
           <IconButton
             icon={hasLiked ? <FaHeart color="red" /> : <FaRegHeart />}
-            aria-label={hasLiked ? 'Unlike' : 'Like'}
+            aria-label={hasLiked ? "Unlike" : "Like"}
             variant="ghost"
             onClick={handleToggleLike}
             isDisabled={!user}
           />
           <Text fontSize="sm">{likes.length} likes</Text>
-          
+
           <Flex flex={1} justifyContent="flex-end">
             <HStack>
               <FaComment />
@@ -205,14 +222,18 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
             </HStack>
           </Flex>
         </HStack>
-        
+
         <Divider mb={4} />
-        
+
         {/* Comment input */}
         {user ? (
           <form onSubmit={handleSubmitComment}>
             <HStack mb={4}>
-              <Avatar size="sm" name={user.name} src={user.avatar} />
+              <Avatar
+                size="sm"
+                name={user.username || user.name}
+                src={user.avatar}
+              />
               <Input
                 placeholder="Add a comment..."
                 value={newComment}
@@ -236,25 +257,46 @@ const CommentSection = ({ postId, initialComments = [], initialLikes = [], isOpe
             Please log in to comment
           </Text>
         )}
-        
+
         {/* Comments list */}
-        <VStack align="stretch" spacing={4} maxH="300px" overflowY="auto" pr={2}>
+        <VStack
+          align="stretch"
+          spacing={4}
+          maxH="300px"
+          overflowY="auto"
+          pr={2}
+        >
           {comments.length > 0 ? (
             comments.map((comment) => (
-              <Box key={comment._id} p={2} borderRadius="md" bg={useColorModeValue('gray.50', 'gray.700')}>
+              <Box
+                key={comment._id}
+                p={2}
+                borderRadius="md"
+                bg={useColorModeValue("gray.50", "gray.700")}
+              >
                 <HStack justify="space-between" mb={1}>
                   <HStack>
-                    <Avatar size="xs" name={comment.name} src={comment.avatar} />
-                    <Text fontWeight="bold" fontSize="sm">{comment.name}</Text>
+                    <Avatar
+                      size="xs"
+                      name={comment.user?.username || comment.name}
+                      src={comment.user?.avatar || comment.avatar}
+                    />
+                    <Text fontWeight="bold" fontSize="sm">
+                      {comment.user?.username || comment.name}
+                    </Text>
                   </HStack>
                   <Text fontSize="xs" color="gray.500">
-                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(comment.createdAt), {
+                      addSuffix: true,
+                    })}
                   </Text>
                 </HStack>
-                <Text fontSize="sm" ml={8}>{comment.text}</Text>
-                
+                <Text fontSize="sm" ml={8}>
+                  {comment.text}
+                </Text>
+
                 {/* Delete button (only for comment owner) */}
-                {user && user._id === comment.user && (
+                {user && user._id === (comment.user?._id || comment.user) && (
                   <Flex justify="flex-end" mt={1}>
                     <IconButton
                       icon={<FaTrash />}

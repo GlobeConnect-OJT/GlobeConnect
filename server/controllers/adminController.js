@@ -119,7 +119,7 @@ exports.deleteComment = async (req, res, next) => {
 
     // Remove the comment
     post.comments = post.comments.filter(
-      (comment) => comment._id.toString() !== commentId
+      (comment) => comment._id.toString() !== commentId,
     );
 
     await post.save();

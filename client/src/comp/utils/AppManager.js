@@ -5,36 +5,36 @@ import EventEmitter from "events";
 const { AppNotifKey } = Constants;
 
 export default class AppManager {
-	static instance = null;
-	eventListener = new EventEmitter();
+  static instance = null;
+  eventListener = new EventEmitter();
 
-	/**
-	 * @returns {AppManager}
-	 **/
+  /**
+   * @returns {AppManager}
+   **/
 
-	static getInstance() {
-		if (AppManager.instance == null) {
-			AppManager.instance = new AppManager();
-		}
+  static getInstance() {
+    if (AppManager.instance == null) {
+      AppManager.instance = new AppManager();
+    }
 
-		return this.instance;
-	}
+    return this.instance;
+  }
 
-	/*  Public Interface Methods */
+  /*  Public Interface Methods */
 
-	/*  UI Events Methods   */
+  /*  UI Events Methods   */
 
-	addEventListener = (eventType, callback) => {
-		this.eventListener.on(eventType, callback);
-	};
+  addEventListener = (eventType, callback) => {
+    this.eventListener.on(eventType, callback);
+  };
 
-	removeEventListener = (eventType, callback) => {
-		this.eventListener.removeListener(eventType, callback);
-	};
+  removeEventListener = (eventType, callback) => {
+    this.eventListener.removeListener(eventType, callback);
+  };
 
-	showFavPlaceItem = (favPlaceItem) => {
-		this.eventListener.emit(AppNotifKey.SHOW_FAV_PLACE, favPlaceItem);
-	};
+  showFavPlaceItem = (favPlaceItem) => {
+    this.eventListener.emit(AppNotifKey.SHOW_FAV_PLACE, favPlaceItem);
+  };
 
-	/*  Store axios request - response  */
+  /*  Store axios request - response  */
 }

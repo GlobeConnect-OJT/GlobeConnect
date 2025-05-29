@@ -26,7 +26,7 @@ exports.addFavorite = async (req, res, next) => {
 
     // Check if state is already in favorites (case-insensitive)
     const existingFavorite = user.favorites.find(
-      (fav) => fav.state && fav.state.toLowerCase() === state.toLowerCase()
+      (fav) => fav.state && fav.state.toLowerCase() === state.toLowerCase(),
     );
 
     if (existingFavorite) {
@@ -78,7 +78,7 @@ exports.removeFavorite = async (req, res, next) => {
 
     // Find and remove the favorite
     const favoriteIndex = user.favorites.findIndex(
-      (fav) => fav._id.toString() === favoriteId
+      (fav) => fav._id.toString() === favoriteId,
     );
 
     if (favoriteIndex === -1) {
@@ -191,7 +191,7 @@ exports.checkFavoriteByState = async (req, res, next) => {
 
     // Check if state is in favorites (case-insensitive)
     const favorite = user.favorites.find(
-      (fav) => fav.state && fav.state.toLowerCase() === stateName.toLowerCase()
+      (fav) => fav.state && fav.state.toLowerCase() === stateName.toLowerCase(),
     );
 
     res.status(200).json({
@@ -204,4 +204,4 @@ exports.checkFavoriteByState = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}; 
+};

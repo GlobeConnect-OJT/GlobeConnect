@@ -1,10 +1,10 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_URL = 'http://localhost:5000/api/favorites';
+const API_URL = "http://localhost:5000/api/favorites";
 
 // Get auth token from localStorage
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -34,16 +34,22 @@ export const getFavorites = async () => {
 
 // Check if location is in favorites (deprecated - kept for backward compatibility)
 export const checkFavorite = async (latitude, longitude) => {
-  const response = await axios.get(`${API_URL}/check/${latitude}/${longitude}`, {
-    headers: getAuthHeaders(),
-  });
+  const response = await axios.get(
+    `${API_URL}/check/${latitude}/${longitude}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   return response.data;
 };
 
 // Check if state is in favorites
 export const checkFavoriteByState = async (stateName) => {
-  const response = await axios.get(`${API_URL}/check-state/${encodeURIComponent(stateName)}`, {
-    headers: getAuthHeaders(),
-  });
+  const response = await axios.get(
+    `${API_URL}/check-state/${encodeURIComponent(stateName)}`,
+    {
+      headers: getAuthHeaders(),
+    },
+  );
   return response.data;
-}; 
+};
