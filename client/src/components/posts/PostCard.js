@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Image,
@@ -20,7 +20,7 @@ import { FaComment, FaMapMarkerAlt, FaCalendarAlt, FaHeart, FaRegHeart } from "r
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import CommentSection from "../comments/CommentSection";
-import { joinPostRoom, leavePostRoom } from "../../utils/socket";
+import { joinPostRoom, leavePostRoom, getSocket } from "../../utils/socket";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
@@ -46,6 +46,24 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
     onToggle();
   };
 
+  // Listen for like updates via socket
+  useEffect(() => {
+    const socket = getSocket();
+    
+    const handleLikeUpdate = (data) => {
+      console.log("Received like update:", data);
+      if (data.postId === post._id) {
+        setLikes(data.likes);
+      }
+    };
+
+    socket.on("like-update", handleLikeUpdate);
+
+    return () => {
+      socket.off("like-update", handleLikeUpdate);
+    };
+  }, [post._id]);
+
   // Handle like/unlike
   const handleToggleLike = async () => {
     if (!user) {
@@ -69,9 +87,15 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
         },
       };
 
-      await axios.post(`${API_BASE_URL}/posts/${post._id}/like`, {}, config);
-      // Likes will be updated via socket.io
+      const response = await axios.post(`${API_BASE_URL}/posts/${post._id}/like`, {}, config);
+      console.log("Like response:", response.data);
+      
+      // Update likes immediately for better UX
+      if (response.data.status === "success") {
+        setLikes(response.data.data.likes);
+      }
     } catch (error) {
+      console.error("Error toggling like:", error);
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to toggle like",
