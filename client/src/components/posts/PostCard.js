@@ -20,7 +20,7 @@ import { FaComment, FaMapMarkerAlt, FaCalendarAlt, FaHeart, FaRegHeart } from "r
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
 import CommentSection from "../comments/CommentSection";
-import { joinPostRoom, leavePostRoom, getSocket } from "../../utils/socket";
+import { joinPostRoom, leavePostRoom, getSocket, initSocket } from "../../utils/socket";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
@@ -36,20 +36,12 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
   const { user, token } = useAuth();
   const toast = useToast();
 
-  // Join post room when comments are opened
-  const handleToggleComments = () => {
-    if (!isOpen) {
-      joinPostRoom(post._id);
-    } else {
-      leavePostRoom(post._id);
-    }
-    onToggle();
-  };
-
-  // Listen for like updates via socket
+  // Initialize socket connection and join post room
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket) return;
+    const socket = initSocket();
+    
+    // Join post room immediately
+    joinPostRoom(post._id);
     
     const handleLikeUpdate = (data) => {
       console.log("Received like update:", data);
@@ -59,11 +51,38 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
     };
 
     socket.on("like-update", handleLikeUpdate);
+    socket.on("connect", () => {
+      console.log("Socket connected, joining post room:", post._id);
+      joinPostRoom(post._id);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Socket disconnected");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
+    });
 
     return () => {
+      console.log("Cleaning up socket listeners for post:", post._id);
+      leavePostRoom(post._id);
       socket.off("like-update", handleLikeUpdate);
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("connect_error");
     };
   }, [post._id]);
+
+  // Join/leave post room when comments are opened/closed
+  const handleToggleComments = () => {
+    if (!isOpen) {
+      joinPostRoom(post._id);
+    } else {
+      leavePostRoom(post._id);
+    }
+    onToggle();
+  };
 
   // Handle like/unlike
   const handleToggleLike = async () => {
@@ -94,6 +113,15 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
       // Update likes immediately for better UX
       if (response.data.status === "success" && Array.isArray(response.data.data.likes)) {
         setLikes(response.data.data.likes);
+        
+        // Emit like update to other clients
+        const socket = getSocket();
+        if (socket) {
+          socket.emit("like-update", {
+            postId: post._id,
+            likes: response.data.data.likes
+          });
+        }
       }
     } catch (error) {
       console.error("Error toggling like:", error);
