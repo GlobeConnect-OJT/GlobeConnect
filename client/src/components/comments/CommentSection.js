@@ -84,7 +84,7 @@ const CommentSection = ({
     socket.on("comment-deleted", (data) => {
       if (data.postId === postId) {
         setComments((prevComments) =>
-          prevComments.filter((comment) => comment._id !== data.commentId)
+          prevComments.filter((comment) => comment._id !== data.commentId),
         );
       }
     });
@@ -121,7 +121,7 @@ const CommentSection = ({
       await axios.post(
         `${API_BASE_URL}/posts/${postId}/comments`,
         { text: newComment },
-        config
+        config,
       );
 
       // The comment will be added via socket.io
@@ -150,7 +150,7 @@ const CommentSection = ({
 
       await axios.delete(
         `${API_BASE_URL}/posts/${postId}/comments/${commentId}`,
-        config
+        config,
       );
 
       // The comment will be removed via socket.io

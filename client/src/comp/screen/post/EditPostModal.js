@@ -21,7 +21,7 @@ import {
   HStack,
   VStack,
   InputGroup,
-  InputRightElement
+  InputRightElement,
 } from "@chakra-ui/react";
 import { CloseIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { FaLocationArrow } from "react-icons/fa";
@@ -89,8 +89,8 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
   };
 
   const removeExistingImage = (imageUrl) => {
-    setExistingImages(prev => prev.filter(img => img !== imageUrl));
-    setImagesToDelete(prev => [...prev, imageUrl]);
+    setExistingImages((prev) => prev.filter((img) => img !== imageUrl));
+    setImagesToDelete((prev) => [...prev, imageUrl]);
   };
 
   const handleContentChange = (e) => {
@@ -135,11 +135,11 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
     try {
       setIsLoading(true);
       const formData = new FormData();
-      
+
       formData.append("title", title.trim());
       formData.append("description", content.trim());
       formData.append("stateName", location.trim());
-      
+
       // Add new files
       files.forEach((file) => {
         formData.append("images", file);
@@ -151,7 +151,7 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
       }
 
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         throw new Error("Authentication token not found. Please log in again.");
       }
@@ -161,20 +161,23 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
         description: content.trim(),
         stateName: location.trim(),
         newFileCount: files.length,
-        imagesToDelete: imagesToDelete.length
+        imagesToDelete: imagesToDelete.length,
       });
 
-      const res = await fetch(`http://localhost:5000/api/posts/${post._id || post.id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`
-          // Don't set Content-Type for FormData
+      const res = await fetch(
+        `http://localhost:5000/api/posts/${post._id || post.id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // Don't set Content-Type for FormData
+          },
+          body: formData,
         },
-        body: formData
-      });
+      );
 
       const responseText = await res.text();
-      
+
       if (!res.ok) {
         let errorMessage = "Failed to update post";
         try {
@@ -205,14 +208,14 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
       if (onPostUpdated) {
         onPostUpdated();
       }
-      
+
       onClose();
-      
     } catch (error) {
       console.error("Error updating post:", error);
       toast({
         title: "Error updating post",
-        description: error.message || "An error occurred while updating your post.",
+        description:
+          error.message || "An error occurred while updating your post.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -227,36 +230,68 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
 
     if (totalImages === 0) {
       return (
-        <Flex 
-          direction="column" 
-          align="center" 
-          justify="center" 
-          p={8} 
-          border="2px dashed" 
-          borderColor={borderColor} 
-          borderRadius="md" 
-          width="100%" 
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          p={8}
+          border="2px dashed"
+          borderColor={borderColor}
+          borderRadius="md"
+          width="100%"
           height="200px"
           onClick={() => fileInputRef.current?.click()}
           cursor="pointer"
           _hover={{ bg: "gray.50" }}
         >
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="8" width="20" height="22" rx="2" stroke="currentColor" strokeWidth="2" />
-            <path d="M18 22L22 18M22 18L26 22M22 18V30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <rect x="18" y="18" width="20" height="22" rx="2" stroke="currentColor" strokeWidth="2" />
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="10"
+              y="8"
+              width="20"
+              height="22"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M18 22L22 18M22 18L26 22M22 18V30"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <rect
+              x="18"
+              y="18"
+              width="20"
+              height="22"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
           </svg>
-          <Text mt={4} color="gray.500">Add photos and videos</Text>
-          <Text fontSize="sm" color="gray.400">Click to select from computer</Text>
+          <Text mt={4} color="gray.500">
+            Add photos and videos
+          </Text>
+          <Text fontSize="sm" color="gray.400">
+            Click to select from computer
+          </Text>
         </Flex>
       );
     }
 
     return (
-      <Box 
-        border="1px solid" 
-        borderColor={borderColor} 
-        borderRadius="md" 
+      <Box
+        border="1px solid"
+        borderColor={borderColor}
+        borderRadius="md"
         p={2}
         maxHeight="250px"
         overflowY="auto"
@@ -264,17 +299,22 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
         <Flex flexWrap="wrap" gap={2}>
           {/* Existing Images */}
           {existingImages.map((imageUrl, index) => (
-            <Box key={`existing-${index}`} position="relative" width="100px" height="100px">
-              <Image 
+            <Box
+              key={`existing-${index}`}
+              position="relative"
+              width="100px"
+              height="100px"
+            >
+              <Image
                 src={`http://localhost:5000${imageUrl}`}
-                alt={`Existing ${index}`} 
-                objectFit="cover" 
-                width="100%" 
-                height="100%" 
+                alt={`Existing ${index}`}
+                objectFit="cover"
+                width="100%"
+                height="100%"
                 borderRadius="md"
                 onError={(e) => {
                   console.error("Failed to load image:", imageUrl);
-                  e.target.style.display = 'none';
+                  e.target.style.display = "none";
                 }}
               />
               <IconButton
@@ -292,13 +332,18 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
 
           {/* New Files */}
           {files.map((file, index) => (
-            <Box key={`new-${index}`} position="relative" width="100px" height="100px">
-              <Image 
-                src={URL.createObjectURL(file)} 
-                alt={`New ${index}`} 
-                objectFit="cover" 
-                width="100%" 
-                height="100%" 
+            <Box
+              key={`new-${index}`}
+              position="relative"
+              width="100px"
+              height="100px"
+            >
+              <Image
+                src={URL.createObjectURL(file)}
+                alt={`New ${index}`}
+                objectFit="cover"
+                width="100%"
+                height="100%"
                 borderRadius="md"
               />
               <IconButton
@@ -315,19 +360,21 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
           ))}
 
           {/* Add More Button */}
-          <Flex 
-            justify="center" 
-            align="center" 
-            width="100px" 
-            height="100px" 
-            border="1px dashed" 
-            borderColor={borderColor} 
+          <Flex
+            justify="center"
+            align="center"
+            width="100px"
+            height="100px"
+            border="1px dashed"
+            borderColor={borderColor}
             borderRadius="md"
             onClick={() => fileInputRef.current?.click()}
             cursor="pointer"
             _hover={{ bg: "gray.50" }}
           >
-            <Text fontSize="2xl" color="gray.400">+</Text>
+            <Text fontSize="2xl" color="gray.400">
+              +
+            </Text>
           </Flex>
         </Flex>
       </Box>
@@ -335,35 +382,32 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      size="4xl"
-      isCentered
-    >
+    <Modal isOpen={isOpen} onClose={onClose} size="4xl" isCentered>
       <ModalOverlay />
       <ModalContent bg={bgColor} maxH="90vh" position="relative">
-        <ModalHeader 
-          borderBottom="1px solid" 
+        <ModalHeader
+          borderBottom="1px solid"
           borderColor={borderColor}
-          display="flex" 
+          display="flex"
           alignItems="center"
           justifyContent="space-between"
-          pr={12} 
+          pr={12}
         >
           <Text fontWeight="bold">Edit Post</Text>
         </ModalHeader>
-        
+
         <ModalCloseButton />
-        
+
         <Flex direction="row" maxH="70vh">
           {/* Main Content */}
           <ModalBody p={6} flex="1" overflowY="auto">
             {/* Title Input */}
             <Box mb={4}>
-              <Text mb={2} fontWeight="medium">Title</Text>
-              <Input 
-                placeholder="Enter post title" 
+              <Text mb={2} fontWeight="medium">
+                Title
+              </Text>
+              <Input
+                placeholder="Enter post title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 bg={inputBgColor}
@@ -373,15 +417,19 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
 
             {/* Image Preview */}
             <Box mb={4}>
-              <Text mb={2} fontWeight="medium">Images</Text>
+              <Text mb={2} fontWeight="medium">
+                Images
+              </Text>
               {renderPreview()}
             </Box>
 
             {/* Description */}
             <Box mb={4}>
-              <Text mb={2} fontWeight="medium">Description</Text>
-              <Textarea 
-                placeholder="What's on your mind?" 
+              <Text mb={2} fontWeight="medium">
+                Description
+              </Text>
+              <Textarea
+                placeholder="What's on your mind?"
                 value={content}
                 onChange={handleContentChange}
                 resize="vertical"
@@ -395,10 +443,12 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
 
             {/* Location */}
             <Box>
-              <Text mb={2} fontWeight="medium">Location</Text>
+              <Text mb={2} fontWeight="medium">
+                Location
+              </Text>
               <InputGroup>
-                <Input 
-                  placeholder="Add location" 
+                <Input
+                  placeholder="Add location"
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   bg={inputBgColor}
@@ -415,9 +465,9 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
           <Button variant="ghost" mr={3} onClick={onClose}>
             Cancel
           </Button>
-          <Button 
-            colorScheme="blue" 
-            onClick={handleSubmit} 
+          <Button
+            colorScheme="blue"
+            onClick={handleSubmit}
             isLoading={isLoading}
             isDisabled={!location.trim() || !content.trim() || !title.trim()}
           >
@@ -426,13 +476,13 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
         </ModalFooter>
 
         {/* Hidden file input */}
-        <Input 
+        <Input
           ref={fileInputRef}
-          type="file" 
-          multiple 
-          accept="image/*,video/*" 
-          onChange={handleFileChange} 
-          display="none" 
+          type="file"
+          multiple
+          accept="image/*,video/*"
+          onChange={handleFileChange}
+          display="none"
         />
       </ModalContent>
     </Modal>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -12,14 +12,14 @@ import {
   Button,
   VStack,
   useToast,
-} from '@chakra-ui/react';
-import { register } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
+} from "@chakra-ui/react";
+import { register } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 
 const RegisterModal = ({ isOpen, onClose }) => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const toast = useToast();
@@ -32,15 +32,15 @@ const RegisterModal = ({ isOpen, onClose }) => {
       login(response.data.user, response.token);
       onClose();
       toast({
-        title: 'Registration successful',
-        status: 'success',
+        title: "Registration successful",
+        status: "success",
         duration: 3000,
       });
     } catch (error) {
       toast({
-        title: 'Registration failed',
-        description: error.response?.data?.message || 'Something went wrong',
-        status: 'error',
+        title: "Registration failed",
+        description: error.response?.data?.message || "Something went wrong",
+        status: "error",
         duration: 3000,
       });
     }

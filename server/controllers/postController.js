@@ -264,7 +264,7 @@ exports.updatePost = async (req, res, next) => {
 
       // Filter out deleted images from the array
       newImageUrls = newImageUrls.filter(
-        (url) => !imagesToDelete.includes(url)
+        (url) => !imagesToDelete.includes(url),
       );
     }
 
@@ -280,7 +280,7 @@ exports.updatePost = async (req, res, next) => {
       {
         new: true,
         runValidators: true,
-      }
+      },
     ).populate({
       path: "author",
       select: "username",

@@ -57,8 +57,8 @@ const NotificationItem = ({ notification }) => {
         notification.read
           ? "transparent"
           : colorMode === "dark"
-          ? "blue.900"
-          : "blue.50"
+            ? "blue.900"
+            : "blue.50"
       }
       _hover={{
         bg: colorMode === "dark" ? "gray.700" : "gray.50",

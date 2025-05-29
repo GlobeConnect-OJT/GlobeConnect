@@ -1,4 +1,4 @@
-import { io } from 'socket.io-client';
+import { io } from "socket.io-client";
 
 let socket;
 
@@ -8,23 +8,23 @@ let socket;
  */
 export const initSocket = () => {
   if (!socket) {
-    const SOCKET_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    
+    const SOCKET_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+
     socket = io(SOCKET_URL, {
       withCredentials: true,
-      transports: ['websocket', 'polling']
+      transports: ["websocket", "polling"],
     });
 
-    socket.on('connect', () => {
-      console.log('Connected to Socket.IO server');
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server");
     });
 
-    socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
 
-    socket.on('disconnect', (reason) => {
-      console.log('Disconnected from Socket.IO server:', reason);
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from Socket.IO server:", reason);
     });
   }
 
@@ -37,7 +37,7 @@ export const initSocket = () => {
  */
 export const joinPostRoom = (postId) => {
   if (!socket) initSocket();
-  socket.emit('join-post', postId);
+  socket.emit("join-post", postId);
 };
 
 /**
@@ -45,7 +45,7 @@ export const joinPostRoom = (postId) => {
  * @param {string} postId - The ID of the post to leave
  */
 export const leavePostRoom = (postId) => {
-  if (socket) socket.emit('leave-post', postId);
+  if (socket) socket.emit("leave-post", postId);
 };
 
 /**

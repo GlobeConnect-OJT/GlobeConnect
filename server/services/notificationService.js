@@ -46,11 +46,14 @@ const createNotificationsForFavoriteLocation = async (post, io) => {
             read: notification.read,
             createdAt: notification.createdAt,
           };
-          
+
           io.to(`user_${user._id}`).emit("newNotification", notificationData);
           console.log(`Emitted notification to user ${user._id}`);
         } catch (emitError) {
-          console.error(`Error emitting notification to user ${user._id}:`, emitError);
+          console.error(
+            `Error emitting notification to user ${user._id}:`,
+            emitError,
+          );
         }
       }
 
@@ -59,12 +62,14 @@ const createNotificationsForFavoriteLocation = async (post, io) => {
 
     // Wait for all notifications to be created
     const notifications = await Promise.all(notificationPromises);
-    
+
     // Filter out null values (author notifications)
-    const validNotifications = notifications.filter(n => n !== null);
-    
-    console.log(`Created ${validNotifications.length} notifications for new post in ${post.stateName}`);
-    
+    const validNotifications = notifications.filter((n) => n !== null);
+
+    console.log(
+      `Created ${validNotifications.length} notifications for new post in ${post.stateName}`,
+    );
+
     return validNotifications;
   } catch (error) {
     console.error("Error creating notifications for favorite location:", error);
@@ -81,7 +86,9 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
       $or: [
         { "favorites.state": { $regex: new RegExp(post.stateName, "i") } },
         { "favorites.country": { $regex: new RegExp(post.stateName, "i") } },
-        { "favorites.displayName": { $regex: new RegExp(post.stateName, "i") } },
+        {
+          "favorites.displayName": { $regex: new RegExp(post.stateName, "i") },
+        },
       ],
     };
 
@@ -95,10 +102,16 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
       }
 
       // Find the specific favorite location that matches
-      const matchingFavorite = user.favorites.find(fav => 
-        (fav.state && fav.state.toLowerCase().includes(post.stateName.toLowerCase())) ||
-        (fav.country && fav.country.toLowerCase().includes(post.stateName.toLowerCase())) ||
-        (fav.displayName && fav.displayName.toLowerCase().includes(post.stateName.toLowerCase()))
+      const matchingFavorite = user.favorites.find(
+        (fav) =>
+          (fav.state &&
+            fav.state.toLowerCase().includes(post.stateName.toLowerCase())) ||
+          (fav.country &&
+            fav.country.toLowerCase().includes(post.stateName.toLowerCase())) ||
+          (fav.displayName &&
+            fav.displayName
+              .toLowerCase()
+              .includes(post.stateName.toLowerCase())),
       );
 
       if (!matchingFavorite) {
@@ -142,11 +155,14 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
             read: notification.read,
             createdAt: notification.createdAt,
           };
-          
+
           io.to(`user_${user._id}`).emit("newNotification", notificationData);
           console.log(`Emitted notification to user ${user._id}`);
         } catch (emitError) {
-          console.error(`Error emitting notification to user ${user._id}:`, emitError);
+          console.error(
+            `Error emitting notification to user ${user._id}:`,
+            emitError,
+          );
         }
       }
 
@@ -155,12 +171,14 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
 
     // Wait for all notifications to be created
     const notifications = await Promise.all(notificationPromises);
-    
+
     // Filter out null values
-    const validNotifications = notifications.filter(n => n !== null);
-    
-    console.log(`Created ${validNotifications.length} notifications for new post in ${post.stateName}`);
-    
+    const validNotifications = notifications.filter((n) => n !== null);
+
+    console.log(
+      `Created ${validNotifications.length} notifications for new post in ${post.stateName}`,
+    );
+
     return validNotifications;
   } catch (error) {
     console.error("Error creating notifications for favorite location:", error);
@@ -171,4 +189,4 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
 module.exports = {
   createNotificationsForFavoriteLocation,
   createNotificationsForFavoriteLocationEnhanced,
-}; 
+};

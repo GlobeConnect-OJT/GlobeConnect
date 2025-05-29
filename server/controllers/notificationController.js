@@ -5,8 +5,8 @@ const Notification = require("../models/Notification");
 // @access  Private
 exports.getNotifications = async (req, res, next) => {
   try {
-    console.log('Getting notifications for user:', req.user._id);
-    
+    console.log("Getting notifications for user:", req.user._id);
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
@@ -24,7 +24,9 @@ exports.getNotifications = async (req, res, next) => {
       recipient: req.user._id,
     });
 
-    console.log(`Found ${notifications.length} notifications for user ${req.user._id}`);
+    console.log(
+      `Found ${notifications.length} notifications for user ${req.user._id}`,
+    );
 
     res.status(200).json({
       status: "success",
@@ -35,7 +37,7 @@ exports.getNotifications = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error('Error in getNotifications:', error);
+    console.error("Error in getNotifications:", error);
     next(error);
   }
 };
@@ -48,7 +50,7 @@ exports.markAsRead = async (req, res, next) => {
     const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, recipient: req.user._id },
       { read: true },
-      { new: true }
+      { new: true },
     );
 
     if (!notification) {
@@ -76,7 +78,7 @@ exports.markAllAsRead = async (req, res, next) => {
   try {
     await Notification.updateMany(
       { recipient: req.user._id, read: false },
-      { read: true }
+      { read: true },
     );
 
     res.status(200).json({
@@ -119,8 +121,8 @@ exports.deleteNotification = async (req, res, next) => {
 // @access  Private
 exports.getUnreadCount = async (req, res, next) => {
   try {
-    console.log('Getting unread count for user:', req.user._id);
-    
+    console.log("Getting unread count for user:", req.user._id);
+
     const unreadCount = await Notification.countDocuments({
       recipient: req.user._id,
       read: false,
@@ -135,7 +137,7 @@ exports.getUnreadCount = async (req, res, next) => {
       },
     });
   } catch (error) {
-    console.error('Error in getUnreadCount:', error);
+    console.error("Error in getUnreadCount:", error);
     next(error);
   }
-}; 
+};

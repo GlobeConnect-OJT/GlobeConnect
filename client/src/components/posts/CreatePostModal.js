@@ -148,7 +148,7 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
       const response = await axios.post(
         `${API_BASE_URL}/posts`,
         formData,
-        config
+        config,
       );
 
       // Show success message

@@ -1,7 +1,3 @@
-
-
-const Color = {
-
-};
+const Color = {};
 
 export default Color;

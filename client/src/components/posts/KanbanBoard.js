@@ -30,7 +30,7 @@ const KanbanBoard = ({ posts = [], isLoading, onCreatePost }) => {
   const categories = [
     "all",
     ...new Set(
-      posts.map((post) => post.category || "uncategorized").filter(Boolean)
+      posts.map((post) => post.category || "uncategorized").filter(Boolean),
     ),
   ];
 
@@ -64,7 +64,7 @@ const KanbanBoard = ({ posts = [], isLoading, onCreatePost }) => {
         const startIndex = i * postsPerColumn;
         const columnPosts = sortedPosts.slice(
           startIndex,
-          startIndex + postsPerColumn
+          startIndex + postsPerColumn,
         );
         newColumns.push(columnPosts);
       }

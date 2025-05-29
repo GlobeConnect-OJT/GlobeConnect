@@ -175,7 +175,7 @@ const ProfilePage = () => {
   const handleDeletePost = async (postId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this post? This action cannot be undone."
+        "Are you sure you want to delete this post? This action cannot be undone.",
       )
     ) {
       return;
@@ -192,7 +192,7 @@ const ProfilePage = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -518,7 +518,7 @@ const ProfilePage = () => {
                                   handleImageError(
                                     imageUrl,
                                     post._id || post.id,
-                                    index
+                                    index,
                                   )
                                 }
                                 fallback={
