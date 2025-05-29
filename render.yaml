@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: globeconnect-api
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLIENT_URL
+        value: https://globeconnect-client.onrender.com
+
+  - type: static
+    name: globeconnect-client
+    buildCommand: cd client && npm install && npm run build
+    publishDir: client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://globeconnect-api.onrender.com
+      - key: REACT_APP_ENV
+        value: production

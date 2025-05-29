@@ -1,6 +1,7 @@
 import axios from "axios";
+import config from '../utils/config';
 
-const API_URL = "http://localhost:5000/api/favorites";
+const API_URL = `${config.API_URL}/api/favorites`;
 
 // Get auth token from localStorage
 const getAuthHeaders = () => {
