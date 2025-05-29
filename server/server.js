@@ -97,14 +97,21 @@ app.use(
 app.use(morgan("dev"));
 app.use(limiter);
 
-// Serve static files
+// Serve static files in production
 if (process.env.NODE_ENV === "production") {
-  // Serve static files from the React app
-  app.use(express.static(path.join(__dirname, "public")));
+  app.use(express.static(path.join(__dirname, "../client/build")));
 
-  // Handle React routing, return all requests to React app
+  // Routes
+  app.use("/api/auth", authRoutes);
+  app.use("/api/posts", postRoutes);
+  app.use("/api/history", historyRoutes);
+  app.use("/api/admin", adminRoutes);
+  app.use("/api/favorites", favoritesRoutes);
+  app.use("/api/notifications", notificationRoutes);
+
+  // Handle React routing
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
   });
 } else {
   // Development routes
