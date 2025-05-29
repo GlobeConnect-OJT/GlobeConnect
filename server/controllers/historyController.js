@@ -41,16 +41,16 @@ exports.getStateHistory = async (req, res, next) => {
       // Try Wikipedia API first
       const wikiSearchResponse = await axios.get(
         `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-          sanitizedLocationName
-        )}&format=json&origin=*`
+          sanitizedLocationName,
+        )}&format=json&origin=*`,
       );
 
       if (wikiSearchResponse.data.query.search.length > 0) {
         const pageTitle = wikiSearchResponse.data.query.search[0].title;
         const wikiResponse = await axios.get(
           `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(
-            pageTitle
-          )}`
+            pageTitle,
+          )}`,
         );
 
         if (wikiResponse.data && wikiResponse.data.extract) {
@@ -69,8 +69,8 @@ exports.getStateHistory = async (req, res, next) => {
       try {
         const countryResponse = await axios.get(
           `https://restcountries.com/v3.1/name/${encodeURIComponent(
-            sanitizedLocationName
-          )}`
+            sanitizedLocationName,
+          )}`,
         );
 
         if (countryResponse.data && countryResponse.data.length > 0) {

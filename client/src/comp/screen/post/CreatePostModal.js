@@ -21,7 +21,7 @@ import {
   HStack,
   VStack,
   InputGroup,
-  InputRightElement
+  InputRightElement,
 } from "@chakra-ui/react";
 import { CloseIcon, ArrowBackIcon } from "@chakra-ui/icons";
 import { FaLocationArrow } from "react-icons/fa";
@@ -63,7 +63,6 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   };
 
   const handleSubmit = async () => {
-   
     if (!title.trim()) {
       toast({
         title: "Title required",
@@ -100,17 +99,17 @@ const CreatePostModal = ({ isOpen, onClose }) => {
     try {
       setIsLoading(true);
       const formData = new FormData();
-      
+
       formData.append("title", title.trim());
       formData.append("description", content.trim());
-      formData.append("stateName", location.trim()); 
-      
+      formData.append("stateName", location.trim());
+
       files.forEach((file) => {
         formData.append("images", file);
       });
 
       const token = localStorage.getItem("token");
-      
+
       if (!token) {
         throw new Error("Authentication token not found. Please log in again.");
       }
@@ -119,20 +118,20 @@ const CreatePostModal = ({ isOpen, onClose }) => {
         title: title.trim(),
         description: content.trim(),
         stateName: location.trim(),
-        fileCount: files.length
+        fileCount: files.length,
       });
 
       const res = await fetch("http://localhost:5000/api/posts", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
           // Don't set Content-Type for FormData
         },
-        body: formData
+        body: formData,
       });
 
       const responseText = await res.text();
-      
+
       if (!res.ok) {
         let errorMessage = "Failed to create post";
         try {
@@ -166,14 +165,14 @@ const CreatePostModal = ({ isOpen, onClose }) => {
       setLocation("");
       setShowSidebar(false);
       setCharCount(0);
-      
+
       onClose();
-      
     } catch (error) {
       console.error("Error creating post:", error);
       toast({
         title: "Error creating post.",
-        description: error.message || "An error occurred while creating your post.",
+        description:
+          error.message || "An error occurred while creating your post.",
         status: "error",
         duration: 5000,
         isClosable: true,
@@ -186,48 +185,76 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   const renderPreview = () => {
     if (files.length === 0) {
       return (
-        <Flex 
-          direction="column" 
-          align="center" 
-          justify="center" 
-          p={10} 
-          border="2px dashed" 
-          borderColor={borderColor} 
-          borderRadius="md" 
-          width="100%" 
+        <Flex
+          direction="column"
+          align="center"
+          justify="center"
+          p={10}
+          border="2px dashed"
+          borderColor={borderColor}
+          borderRadius="md"
+          width="100%"
           height="250px"
         >
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="8" width="20" height="22" rx="2" stroke="currentColor" strokeWidth="2" />
-            <path d="M18 22L22 18M22 18L26 22M22 18V30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <rect x="18" y="18" width="20" height="22" rx="2" stroke="currentColor" strokeWidth="2" />
+          <svg
+            width="48"
+            height="48"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              x="10"
+              y="8"
+              width="20"
+              height="22"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            <path
+              d="M18 22L22 18M22 18L26 22M22 18V30"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <rect
+              x="18"
+              y="18"
+              width="20"
+              height="22"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
           </svg>
           <Text mt={4}>Drag photos and videos here</Text>
-          <Button 
-            colorScheme="blue" 
-            size="sm" 
-            mt={4} 
+          <Button
+            colorScheme="blue"
+            size="sm"
+            mt={4}
             onClick={() => fileInputRef.current?.click()}
           >
             Select From Computer
           </Button>
-          <Input 
+          <Input
             ref={fileInputRef}
-            type="file" 
-            multiple 
-            accept="image/*,video/*" 
-            onChange={handleFileChange} 
-            display="none" 
+            type="file"
+            multiple
+            accept="image/*,video/*"
+            onChange={handleFileChange}
+            display="none"
           />
         </Flex>
       );
     }
 
     return (
-      <Box 
-        border="1px solid" 
-        borderColor={borderColor} 
-        borderRadius="md" 
+      <Box
+        border="1px solid"
+        borderColor={borderColor}
+        borderRadius="md"
         p={2}
         maxHeight="300px"
         overflowY="auto"
@@ -235,12 +262,12 @@ const CreatePostModal = ({ isOpen, onClose }) => {
         <Flex flexWrap="wrap" gap={2}>
           {files.map((file, index) => (
             <Box key={index} position="relative" width="100px" height="100px">
-              <Image 
-                src={URL.createObjectURL(file)} 
-                alt={`Preview ${index}`} 
-                objectFit="cover" 
-                width="100%" 
-                height="100%" 
+              <Image
+                src={URL.createObjectURL(file)}
+                alt={`Preview ${index}`}
+                objectFit="cover"
+                width="100%"
+                height="100%"
                 borderRadius="md"
               />
               <IconButton
@@ -266,31 +293,29 @@ const CreatePostModal = ({ isOpen, onClose }) => {
                   borderRadius="md"
                   fontSize="xs"
                   cursor="pointer"
-                  onClick={() => document.getElementById('tagPeopleOverlay')?.focus()}
+                  onClick={() =>
+                    document.getElementById("tagPeopleOverlay")?.focus()
+                  }
                 >
                   Tag People
                 </Box>
               )}
             </Box>
           ))}
-          <Flex 
-            justify="center" 
-            align="center" 
-            width="100px" 
-            height="100px" 
-            border="1px dashed" 
-            borderColor={borderColor} 
+          <Flex
+            justify="center"
+            align="center"
+            width="100px"
+            height="100px"
+            border="1px dashed"
+            borderColor={borderColor}
             borderRadius="md"
             onClick={() => fileInputRef.current?.click()}
             cursor="pointer"
           >
             +
           </Flex>
-          <Input 
-            id="tagPeopleOverlay"
-            aria-label="Tag people"
-            display="none"
-          />
+          <Input id="tagPeopleOverlay" aria-label="Tag people" display="none" />
         </Flex>
       </Box>
     );
@@ -298,20 +323,26 @@ const CreatePostModal = ({ isOpen, onClose }) => {
 
   const renderSidebar = () => {
     return (
-      <VStack 
-        w="300px" 
-        h="100%" 
-        borderLeft="1px solid" 
-        borderColor={borderColor} 
-        p={4} 
-        align="stretch" 
+      <VStack
+        w="300px"
+        h="100%"
+        borderLeft="1px solid"
+        borderColor={borderColor}
+        p={4}
+        align="stretch"
         spacing={4}
       >
         <Flex align="center" mb={4}>
-          <Avatar size="sm" src={user?.avatar} name={user?.username || "User"} />
-          <Text ml={2} fontWeight="bold">{user?.username || "guest"}</Text>
+          <Avatar
+            size="sm"
+            src={user?.avatar}
+            name={user?.username || "User"}
+          />
+          <Text ml={2} fontWeight="bold">
+            {user?.username || "guest"}
+          </Text>
         </Flex>
-        
+
         <Box>
           <Text fontSize="sm" color="gray.500" mb={1}>
             {charCount}/2,200
@@ -320,10 +351,12 @@ const CreatePostModal = ({ isOpen, onClose }) => {
 
         <VStack align="stretch" spacing={3}>
           <Box>
-            <Text mb={1} fontWeight="medium">Add Location</Text>
+            <Text mb={1} fontWeight="medium">
+              Add Location
+            </Text>
             <InputGroup>
-              <Input 
-                placeholder="Add location" 
+              <Input
+                placeholder="Add location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 bg={inputBgColor}
@@ -339,21 +372,21 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size={showSidebar ? "4xl" : "xl"}
       isCentered
     >
       <ModalOverlay />
       <ModalContent bg={bgColor} maxH="90vh" position="relative">
-        <ModalHeader 
-          borderBottom="1px solid" 
+        <ModalHeader
+          borderBottom="1px solid"
           borderColor={borderColor}
-          display="flex" 
+          display="flex"
           alignItems="center"
           justifyContent="space-between"
-          pr={12} 
+          pr={12}
         >
           <Flex align="center">
             {showSidebar && (
@@ -368,16 +401,16 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             Create new post
           </Flex>
           {!showSidebar && (
-            <Button 
-              colorScheme="blue" 
-              variant="ghost" 
+            <Button
+              colorScheme="blue"
+              variant="ghost"
               onClick={() => setShowSidebar(true)}
             >
               Next
             </Button>
           )}
         </ModalHeader>
-        
+
         <IconButton
           icon={<CloseIcon />}
           position="absolute"
@@ -389,23 +422,23 @@ const CreatePostModal = ({ isOpen, onClose }) => {
           aria-label="Close modal"
           zIndex={1}
         />
-        
+
         <Flex direction="row" maxH="70vh">
           <ModalBody p={4} flex="1" overflowY="auto">
             {!showSidebar ? (
               <>
                 {renderPreview()}
-                
+
                 <Box mt={4}>
-                  <Input 
-                    placeholder="Title" 
+                  <Input
+                    placeholder="Title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     mb={2}
                     isRequired
                   />
-                  <Textarea 
-                    placeholder="What's on your mind?" 
+                  <Textarea
+                    placeholder="What's on your mind?"
                     value={content}
                     onChange={handleContentChange}
                     resize="vertical"
@@ -417,15 +450,21 @@ const CreatePostModal = ({ isOpen, onClose }) => {
               <Flex direction="column" h="100%">
                 <Box flex="1" overflowY="auto">
                   {renderPreview()}
-                  
+
                   <Flex direction="column" mt={4}>
                     <Flex align="center" mb={4}>
-                      <Avatar size="sm" src={user?.avatar} name={user?.username || "User"} />
-                      <Text ml={2} fontWeight="bold">{user?.username || "guest"}</Text>
+                      <Avatar
+                        size="sm"
+                        src={user?.avatar}
+                        name={user?.username || "User"}
+                      />
+                      <Text ml={2} fontWeight="bold">
+                        {user?.username || "guest"}
+                      </Text>
                     </Flex>
-                    
-                    <Textarea 
-                      placeholder="What's on your mind?" 
+
+                    <Textarea
+                      placeholder="What's on your mind?"
                       value={content}
                       onChange={handleContentChange}
                       resize="vertical"
@@ -436,7 +475,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
                     />
                   </Flex>
                 </Box>
-                
+
                 <HStack mt={4} justify="space-between">
                   <IconButton
                     icon={<MdEmojiEmotions size="24px" />}
@@ -450,7 +489,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
               </Flex>
             )}
           </ModalBody>
-          
+
           {showSidebar && renderSidebar()}
         </Flex>
 
@@ -459,9 +498,9 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             Cancel
           </Button>
           {showSidebar && (
-            <Button 
-              colorScheme="blue" 
-              onClick={handleSubmit} 
+            <Button
+              colorScheme="blue"
+              onClick={handleSubmit}
               isLoading={isLoading}
               isDisabled={!location.trim() || !content.trim() || !title.trim()}
             >

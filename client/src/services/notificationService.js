@@ -1,10 +1,11 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 // Get auth token from localStorage
 const getAuthToken = () => {
-  return localStorage.getItem('token');
+  return localStorage.getItem("token");
 };
 
 // Create axios instance with auth header
@@ -23,7 +24,7 @@ export const notificationService = {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/notifications?page=${page}&limit=${limit}`,
-        createAuthenticatedRequest()
+        createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
@@ -36,7 +37,7 @@ export const notificationService = {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/notifications/unread-count`,
-        createAuthenticatedRequest()
+        createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
@@ -50,7 +51,7 @@ export const notificationService = {
       const response = await axios.patch(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
         {},
-        createAuthenticatedRequest()
+        createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
@@ -64,7 +65,7 @@ export const notificationService = {
       const response = await axios.patch(
         `${API_BASE_URL}/notifications/mark-all-read`,
         {},
-        createAuthenticatedRequest()
+        createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {
@@ -77,7 +78,7 @@ export const notificationService = {
     try {
       const response = await axios.delete(
         `${API_BASE_URL}/notifications/${notificationId}`,
-        createAuthenticatedRequest()
+        createAuthenticatedRequest(),
       );
       return response.data;
     } catch (error) {

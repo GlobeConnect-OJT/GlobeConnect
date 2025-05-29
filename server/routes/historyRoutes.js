@@ -12,7 +12,7 @@ router.delete(
   "/:stateName",
   protect,
   checkAdminRole,
-  historyController.clearHistoryCache
+  historyController.clearHistoryCache,
 );
 
 module.exports = router;

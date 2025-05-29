@@ -1,6 +1,5 @@
 const Post = require("../models/Post");
 const User = require("../models/User");
-const { getIO } = require("../utils/socket");
 
 // @desc    Add comment to a post
 // @route   POST /api/posts/:id/comments
@@ -49,15 +48,17 @@ exports.addComment = async (req, res, next) => {
 
     // Find the populated comment from the populated post
     const populatedComment = populatedPost.comments.find(
-      (comment) => comment._id.toString() === addedComment._id.toString()
+      (comment) => comment._id.toString() === addedComment._id.toString(),
     );
 
     // Emit socket event for real-time comment update
-    const io = getIO();
-    io.to(`post:${post._id}`).emit('comment-added', {
-      postId: post._id,
-      comment: populatedComment
-    });
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`post:${post._id}`).emit("comment-added", {
+        postId: post._id,
+        comment: populatedComment,
+      });
+    }
 
     res.status(201).json({
       status: "success",
@@ -117,7 +118,7 @@ exports.deleteComment = async (req, res, next) => {
 
     // Find the comment
     const comment = post.comments.find(
-      (comment) => comment._id.toString() === commentId
+      (comment) => comment._id.toString() === commentId,
     );
 
     if (!comment) {
@@ -141,17 +142,19 @@ exports.deleteComment = async (req, res, next) => {
 
     // Remove the comment
     post.comments = post.comments.filter(
-      (comment) => comment._id.toString() !== commentId
+      (comment) => comment._id.toString() !== commentId,
     );
 
     await post.save();
 
     // Emit socket event for real-time comment deletion
-    const io = getIO();
-    io.to(`post:${post._id}`).emit('comment-deleted', {
-      postId: post._id,
-      commentId: commentId
-    });
+    const io = req.app.get("io");
+    if (io) {
+      io.to(`post:${post._id}`).emit("comment-deleted", {
+        postId: post._id,
+        commentId: commentId,
+      });
+    }
 
     res.status(204).json({
       status: "success",
@@ -188,7 +191,7 @@ exports.updateComment = async (req, res, next) => {
 
     // Find the comment
     const commentIndex = post.comments.findIndex(
-      (comment) => comment._id.toString() === commentId
+      (comment) => comment._id.toString() === commentId,
     );
 
     if (commentIndex === -1) {
@@ -219,7 +222,7 @@ exports.updateComment = async (req, res, next) => {
     });
 
     const updatedComment = updatedPost.comments.find(
-      (comment) => comment._id.toString() === commentId
+      (comment) => comment._id.toString() === commentId,
     );
 
     res.status(200).json({

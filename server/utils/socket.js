@@ -1,4 +1,4 @@
-const socketIO = require('socket.io');
+const socketIO = require("socket.io");
 
 let io;
 
@@ -9,30 +9,30 @@ let io;
 const initSocket = (server) => {
   io = socketIO(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:3000',
-      methods: ['GET', 'POST'],
-      credentials: true
-    }
+      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      methods: ["GET", "POST"],
+      credentials: true,
+    },
   });
 
-  io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
+  io.on("connection", (socket) => {
+    console.log("New client connected:", socket.id);
 
     // Join a room for specific post
-    socket.on('join-post', (postId) => {
+    socket.on("join-post", (postId) => {
       socket.join(`post:${postId}`);
       console.log(`Socket ${socket.id} joined room for post: ${postId}`);
     });
 
     // Leave a post room
-    socket.on('leave-post', (postId) => {
+    socket.on("leave-post", (postId) => {
       socket.leave(`post:${postId}`);
       console.log(`Socket ${socket.id} left room for post: ${postId}`);
     });
 
     // Handle disconnection
-    socket.on('disconnect', () => {
-      console.log('Client disconnected:', socket.id);
+    socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
     });
   });
 
@@ -45,12 +45,12 @@ const initSocket = (server) => {
  */
 const getIO = () => {
   if (!io) {
-    throw new Error('Socket.IO not initialized');
+    throw new Error("Socket.IO not initialized");
   }
   return io;
 };
 
 module.exports = {
   initSocket,
-  getIO
+  getIO,
 };

@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { connect } from "react-redux";
-import { Box, Flex, IconButton, Tooltip, Text, useColorMode } from "@chakra-ui/react";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Tooltip,
+  Text,
+  useColorMode,
+} from "@chakra-ui/react";
 import { AddIcon, MinusIcon, SearchIcon } from "@chakra-ui/icons";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -10,7 +17,7 @@ import Constants from "../../utils/Constants";
 import "./index.css";
 import "./geosearch.css";
 import lodash from "lodash";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { getLocationFromCoordinates } from "../../utils/geocoding";
 
 // Fix for Leaflet marker icon issue in React
@@ -33,9 +40,10 @@ const MapView = (props) => {
   const { userConfig, userPref } = props;
   const navigate = useNavigate();
   const { colorMode } = useColorMode();
-  
+
   const [state, setState] = useState({
-    selectedMenuType: userConfig?.selectedMenuType ?? MasterDrawerMenuType.Search,
+    selectedMenuType:
+      userConfig?.selectedMenuType ?? MasterDrawerMenuType.Search,
     isMapLoaded: false,
     zoomLevel: 3,
     popupContent: null,
@@ -109,26 +117,28 @@ const MapView = (props) => {
     const provider = new OpenStreetMapProvider();
     const searchControl = new GeoSearchControl({
       provider: provider,
-      style: 'bar',
+      style: "bar",
       showMarker: true,
       showPopup: false,
       autoClose: true,
       retainZoomLevel: false,
       animateZoom: true,
       keepResult: true,
-      searchLabel: 'Enter address or coordinates',
+      searchLabel: "Enter address or coordinates",
     });
 
     map.addControl(searchControl);
 
     // Handle GeoSearch result selection
-    map.on('geosearch/showlocation', async (e) => {
+    map.on("geosearch/showlocation", async (e) => {
       const { x: lng, y: lat } = e.location;
       const selectedPlaceCoordinate = { latitude: lat, longitude: lng };
-      
+
       // Get location details from coordinates
-      const locationDetails = await getLocationFromCoordinates(selectedPlaceCoordinate);
-      
+      const locationDetails = await getLocationFromCoordinates(
+        selectedPlaceCoordinate,
+      );
+
       // Create a place item from the search result
       if (locationDetails) {
         const placeItem = {
@@ -140,7 +150,7 @@ const MapView = (props) => {
           state: locationDetails.state,
           city: locationDetails.city,
         };
-        
+
         props.setUserConfig({
           ...userConfig,
           selectedInputCoordinate: null,
@@ -148,7 +158,7 @@ const MapView = (props) => {
           selectedPlaceItem: placeItem,
           isPlaceVisible: true,
         });
-        
+
         showPlaceItem(placeItem);
       } else {
         // If location details couldn't be fetched, just show coordinates
@@ -158,7 +168,7 @@ const MapView = (props) => {
           selectedPlaceCoordinate: selectedPlaceCoordinate,
           isPlaceVisible: true,
         });
-        
+
         showCoordinate(selectedPlaceCoordinate);
       }
     });
@@ -171,16 +181,16 @@ const MapView = (props) => {
     map.on("click", (e) => {
       const { lat, lng } = e.latlng;
       const selectedPlaceCoordinate = { latitude: lat, longitude: lng };
-      
+
       props.setUserConfig({
         ...userConfig,
         selectedInputCoordinate: null,
         selectedPlaceCoordinate: selectedPlaceCoordinate,
         isPlaceVisible: true,
       });
-      
+
       showCoordinate(selectedPlaceCoordinate);
-      
+
       // Navigate to location details page when clicking on the map
       navigate(`/location/${lat}/${lng}`);
     });
@@ -201,20 +211,20 @@ const MapView = (props) => {
 
     // Create popup content
     let popupContent = placeItem.address || "Selected Location";
-    
+
     // Add more details if available
     if (placeItem.name) {
       popupContent = `<b>${placeItem.name}</b><br>${popupContent}`;
     }
-    
+
     if (placeItem.country) {
       popupContent += `<br>Country: ${placeItem.country}`;
     }
-    
+
     if (placeItem.state) {
       popupContent += `<br>State: ${placeItem.state}`;
     }
-    
+
     if (placeItem.city) {
       popupContent += `<br>City: ${placeItem.city}`;
     }
@@ -229,11 +239,11 @@ const MapView = (props) => {
 
     // Center map on the marker with appropriate zoom level
     map.setView([latitude, longitude], 10);
-    
+
     // Update state with popup content
     updateState({
       popupContent: popupContent,
-      showPopup: true
+      showPopup: true,
     });
   };
 
@@ -249,9 +259,11 @@ const MapView = (props) => {
     }
 
     // Format coordinates for display
-    const formattedLat = typeof latitude === 'number' ? latitude.toFixed(6) : latitude;
-    const formattedLng = typeof longitude === 'number' ? longitude.toFixed(6) : longitude;
-    
+    const formattedLat =
+      typeof latitude === "number" ? latitude.toFixed(6) : latitude;
+    const formattedLng =
+      typeof longitude === "number" ? longitude.toFixed(6) : longitude;
+
     // Create popup content with formatted coordinates
     const popupContent = `
       <div>
@@ -271,11 +283,11 @@ const MapView = (props) => {
 
     // Center map on the marker with appropriate zoom level
     map.setView([latitude, longitude], 10);
-    
+
     // Update state with popup content
     updateState({
       popupContent: popupContent,
-      showPopup: true
+      showPopup: true,
     });
   };
 
@@ -344,8 +356,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    setUserConfig: (userConfig) =>
-      dispatch(Actions.setUserConfig(userConfig)),
+    setUserConfig: (userConfig) => dispatch(Actions.setUserConfig(userConfig)),
     setUserPref: (userPref) => dispatch(Actions.setUserPref(userPref)),
   };
 };
