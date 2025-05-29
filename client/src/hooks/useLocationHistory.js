@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+ const API_BASE_URL =
+    process.env.REACT_APP_API_URL;
+
 export const useLocationHistory = (locationName) => {
   const [history, setHistory] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -27,7 +30,7 @@ export const useLocationHistory = (locationName) => {
       try {
         const sanitizedLocation = locationName.trim();
         const response = await axios.get(
-          `http://localhost:5000/api/history/${encodeURIComponent(sanitizedLocation)}`,
+          `${API_BASE_URL}/history/${encodeURIComponent(sanitizedLocation)}`,
         );
 
         if (response.data.status === "success") {

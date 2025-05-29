@@ -8,7 +8,7 @@ let socket;
  */
 export const initSocket = () => {
   if (!socket) {
-    const SOCKET_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_URL || "http://localhost:5000";
 
     socket = io(SOCKET_URL, {
       withCredentials: true,

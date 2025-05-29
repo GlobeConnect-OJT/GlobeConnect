@@ -148,7 +148,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/posts/state/${encodeURIComponent(stateName)}`,
+        `${process.env.REACT_APP_API_URL}/api/posts/state/${encodeURIComponent(stateName)}`,
       );
 
       if (!response.ok) {

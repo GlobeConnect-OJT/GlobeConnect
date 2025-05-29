@@ -121,7 +121,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
         fileCount: files.length,
       });
 
-      const res = await fetch("http://localhost:5000/api/posts", {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/posts`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

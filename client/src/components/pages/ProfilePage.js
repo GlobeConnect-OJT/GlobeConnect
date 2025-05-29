@@ -74,7 +74,7 @@ const ProfilePage = () => {
         throw new Error("Authentication token not found");
       }
 
-      const response = await fetch("http://localhost:5000/api/posts/user", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/posts/user`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -185,7 +185,7 @@ const ProfilePage = () => {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5000/api/posts/${postId}`,
+        `${process.env.REACT_APP_API_URL}/api/posts/${postId}`,
         {
           method: "DELETE",
           headers: {
@@ -231,11 +231,11 @@ const ProfilePage = () => {
 
     // If it starts with /uploads, prepend the server URL
     if (imagePath.startsWith("/uploads")) {
-      return `http://localhost:5000${imagePath}`;
+      return `${process.env.REACT_APP_API_URL}${imagePath}`;
     }
 
     // If it's just a filename, prepend the full uploads path
-    return `http://localhost:5000/uploads/${imagePath}`;
+    return `${process.env.REACT_APP_API_URL}/uploads/${imagePath}`;
   };
 
   const handleImageError = (imageUrl, postId, imageIndex) => {

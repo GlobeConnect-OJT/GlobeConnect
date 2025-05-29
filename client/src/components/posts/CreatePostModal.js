@@ -28,7 +28,7 @@ import { FaUpload, FaTimes, FaImage } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/api`;
 const MAX_CHAR_COUNT = 2000;
 
 const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {

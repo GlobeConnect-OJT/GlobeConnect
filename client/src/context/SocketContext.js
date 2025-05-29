@@ -23,7 +23,7 @@ export const SocketProvider = ({ children }) => {
 
       // Create socket connection
       const newSocket = io(
-        process.env.REACT_APP_SERVER_URL || "http://localhost:5000",
+        process.env.REACT_APP_SOCKET_URL || process.env.REACT_APP_API_URL,
         {
           withCredentials: true,
         },

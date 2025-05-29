@@ -165,7 +165,7 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
       });
 
       const res = await fetch(
-        `http://localhost:5000/api/posts/${post._id || post.id}`,
+        `${process.env.REACT_APP_API_URL}/api/posts/${post._id || post.id}`,
         {
           method: "PUT",
           headers: {
@@ -306,7 +306,7 @@ const EditPostModal = ({ isOpen, onClose, post, onPostUpdated }) => {
               height="100px"
             >
               <Image
-                src={`http://localhost:5000${imageUrl}`}
+                src={`${process.env.REACT_APP_API_URL}${imageUrl}`}
                 alt={`Existing ${index}`}
                 objectFit="cover"
                 width="100%"

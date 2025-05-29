@@ -5,7 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { getSocket } from "../../utils/socket";
 
-const API_BASE_URL = "http://localhost:5000/api";
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/api`;
 
 const LikeButton = ({ postId, initialLikes = [] }) => {
   const [likes, setLikes] = useState(initialLikes);
