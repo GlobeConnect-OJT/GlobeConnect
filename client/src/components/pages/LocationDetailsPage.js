@@ -68,10 +68,24 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
     // Listen for post updates
     socket.on("post-update", (updatedPost) => {
+      console.log("Received post update:", updatedPost);
       setPosts((prevPosts) => {
         return prevPosts.map((post) => {
           if (post._id === updatedPost._id) {
-            return updatedPost;
+            return { ...post, ...updatedPost };
+          }
+          return post;
+        });
+      });
+    });
+
+    // Listen for like updates
+    socket.on("like-update", (data) => {
+      console.log("Received like update:", data);
+      setPosts((prevPosts) => {
+        return prevPosts.map((post) => {
+          if (post._id === data.postId) {
+            return { ...post, likes: data.likes };
           }
           return post;
         });
@@ -81,6 +95,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     return () => {
       // Clean up socket listeners when component unmounts
       socket.off("post-update");
+      socket.off("like-update");
     };
   }, []);
 
