@@ -3,8 +3,8 @@ services:
     name: globeconnect-api
     env: node
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && node server.js
+    buildCommand: npm install
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
@@ -12,6 +12,8 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: PORT
+        value: 5000
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
@@ -20,6 +22,8 @@ services:
         sync: false
       - key: CLIENT_URL
         value: https://globeconnect-client.onrender.com
+    healthCheckPath: /api/health
+    autoDeploy: true
 
   - type: static
     name: globeconnect-client
@@ -30,3 +34,11 @@ services:
         value: https://globeconnect-api.onrender.com
       - key: REACT_APP_ENV
         value: production
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

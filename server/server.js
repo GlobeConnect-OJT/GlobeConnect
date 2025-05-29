@@ -27,20 +27,17 @@ const connectDB = require("./config/db");
 
 // Initialize express app
 const app = express();
-
-// Create HTTP server
 const server = http.createServer(app);
 
-// Connect to database
-connectDB();
-
-// Initialize Socket.IO with CORS configuration
+// Initialize Socket.IO with CORS and production settings
 const io = socketIo(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true,
   },
+  transports: ["websocket", "polling"],
+  pingTimeout: 60000,
 });
 
 // Make io accessible to our routes
@@ -83,54 +80,79 @@ const limiter = rateLimit({
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
 
-// Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(helmet());
+// Middlewares with security settings
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    credentials: true,
+  }),
+);
+app.use(
+  helmet({
+    contentSecurityPolicy: process.env.NODE_ENV === "production" ? undefined : false,
+  }),
+);
 app.use(morgan("dev"));
 app.use(limiter);
 
-// Set static folder
-app.use("/uploads", express.static(path.join(__dirname, "/uploads")));
+// Serve static files in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../client/build")));
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/history", historyRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/favorites", favoritesRoutes);
-app.use("/api/notifications", notificationRoutes);
+  // Routes
+  app.use("/api/auth", authRoutes);
+  app.use("/api/posts", postRoutes);
+  app.use("/api/history", historyRoutes);
+  app.use("/api/admin", adminRoutes);
+  app.use("/api/favorites", favoritesRoutes);
+  app.use("/api/notifications", notificationRoutes);
 
-// Base route
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Global States Explorer API" });
-});
+  // Handle React routing
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+  });
+} else {
+  // Development routes
+  app.use("/api/auth", authRoutes);
+  app.use("/api/posts", postRoutes);
+  app.use("/api/history", historyRoutes);
+  app.use("/api/admin", adminRoutes);
+  app.use("/api/favorites", favoritesRoutes);
+  app.use("/api/notifications", notificationRoutes);
+}
 
-// Error handling middleware
-app.use(errorHandler);
-
-// Handle 404 routes
-app.use("*", (req, res) => {
-  res.status(404).json({
-    status: "fail",
-    message: `Can't find ${req.originalUrl} on this server!`,
+// Error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    status: "error",
+    message: err.message || "Internal server error",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 });
 
-// Start server
+// Connect to database
+connectDB();
+
+// Start server with graceful shutdown
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(
-    `Server running in ${
-      process.env.NODE_ENV || "development"
-    } mode on port ${PORT}`,
-  );
-  console.log(`Socket.IO initialized`);
+const serverInstance = server.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`);
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received. Shutting down gracefully...");
+  serverInstance.close(() => {
+    console.log("Process terminated.");
+  });
 });
 
 process.on("unhandledRejection", (err) => {
   console.log("UNHANDLED REJECTION! 💥 Shutting down...");
   console.log(err.name, err.message);
-  process.exit(1);
+  serverInstance.close(() => {
+    process.exit(1);
+  });
 });
