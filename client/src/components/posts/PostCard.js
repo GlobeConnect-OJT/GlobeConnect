@@ -31,7 +31,7 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.700", "gray.200");
-  const [likes, setLikes] = useState(post.likes || []);
+  const [likes, setLikes] = useState(Array.isArray(post.likes) ? post.likes : []);
   const [isLiking, setIsLiking] = useState(false);
   const { user, token } = useAuth();
   const toast = useToast();
@@ -49,10 +49,11 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
   // Listen for like updates via socket
   useEffect(() => {
     const socket = getSocket();
+    if (!socket) return;
     
     const handleLikeUpdate = (data) => {
       console.log("Received like update:", data);
-      if (data.postId === post._id) {
+      if (data.postId === post._id && Array.isArray(data.likes)) {
         setLikes(data.likes);
       }
     };
@@ -91,7 +92,7 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
       console.log("Like response:", response.data);
       
       // Update likes immediately for better UX
-      if (response.data.status === "success") {
+      if (response.data.status === "success" && Array.isArray(response.data.data.likes)) {
         setLikes(response.data.data.likes);
       }
     } catch (error) {
@@ -109,7 +110,7 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
   };
 
   // Check if current user has liked the post
-  const hasLiked = user ? likes.some((like) => like.toString() === user._id) : false;
+  const hasLiked = user && Array.isArray(likes) ? likes.some((like) => like.toString() === user._id) : false;
 
   return (
     <Box
@@ -190,7 +191,7 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
                   isLoading={isLiking}
                   isDisabled={!user}
                 />
-                <Text fontSize="sm">{likes.length}</Text>
+                <Text fontSize="sm">{Array.isArray(likes) ? likes.length : 0}</Text>
               </HStack>
 
               <HStack spacing={1} onClick={handleToggleComments} cursor="pointer">
