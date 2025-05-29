@@ -27,6 +27,9 @@ const connectDB = require("./config/db");
 
 // Initialize express app
 const app = express();
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
 const server = http.createServer(app);
 
 // Initialize Socket.IO with CORS and production settings
@@ -97,10 +100,6 @@ app.use(
 app.use(morgan("dev"));
 app.use(limiter);
 
-// Serve static files in production
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../client/build")));
-
   // Routes
   app.use("/api/auth", authRoutes);
   app.use("/api/posts", postRoutes);
@@ -109,18 +108,13 @@ if (process.env.NODE_ENV === "production") {
   app.use("/api/favorites", favoritesRoutes);
   app.use("/api/notifications", notificationRoutes);
 
-  // Handle React routing
-  app.get("*", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+if (process.env.NODE_ENV === "production") {
+  const clientBuildPath = path.join(__dirname, "../client/build");
+  app.use(express.static(clientBuildPath));
+  // Only non-API GETs get the SPA fallback:
+  app.get(/^\/(?!api\/).*/, (req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
   });
-} else {
-  // Development routes
-  app.use("/api/auth", authRoutes);
-  app.use("/api/posts", postRoutes);
-  app.use("/api/history", historyRoutes);
-  app.use("/api/admin", adminRoutes);
-  app.use("/api/favorites", favoritesRoutes);
-  app.use("/api/notifications", notificationRoutes);
 }
 
 // Error handling
