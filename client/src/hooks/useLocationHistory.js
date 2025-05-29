@@ -33,10 +33,15 @@ export const useLocationHistory = (locationName) => {
 
       try {
         const sanitizedLocation = locationName.trim();
-        const url = `${API_BASE_URL}/history/${encodeURIComponent(sanitizedLocation)}`;
+        const url = `${API_BASE_URL}/api/history/${encodeURIComponent(sanitizedLocation)}`;
         console.log("Making request to:", url);
         
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
 
         console.log("History API response:", response.data);
 
@@ -54,10 +59,16 @@ export const useLocationHistory = (locationName) => {
           status: err.response?.status,
           url: err.config?.url
         });
-        setError(
-          err.response?.data?.message ||
-            "Failed to fetch history. Please try again later.",
-        );
+        
+        // Check if the response is HTML instead of JSON
+        if (err.response?.data && typeof err.response.data === 'string' && err.response.data.includes('<!doctype html>')) {
+          setError("API endpoint not found. Please check the server configuration.");
+        } else {
+          setError(
+            err.response?.data?.message ||
+            "Failed to fetch history. Please try again later."
+          );
+        }
       } finally {
         setIsLoading(false);
       }
