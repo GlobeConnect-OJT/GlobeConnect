@@ -19,5 +19,5 @@ root.render(
         </ChakraProvider>
       </AuthProvider>
     </PersistGate>
-  </Provider>
+  </Provider>,
 );

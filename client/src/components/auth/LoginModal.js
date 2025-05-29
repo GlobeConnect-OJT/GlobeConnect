@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -12,13 +12,13 @@ import {
   Button,
   VStack,
   useToast,
-} from '@chakra-ui/react';
-import { login } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
+} from "@chakra-ui/react";
+import { login } from "../../services/authService";
+import { useAuth } from "../../context/AuthContext";
 
 const LoginModal = ({ isOpen, onClose }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login: authLogin } = useAuth();
   const toast = useToast();
@@ -31,15 +31,15 @@ const LoginModal = ({ isOpen, onClose }) => {
       authLogin(response.data.user, response.token);
       onClose();
       toast({
-        title: 'Login successful',
-        status: 'success',
+        title: "Login successful",
+        status: "success",
         duration: 3000,
       });
     } catch (error) {
       toast({
-        title: 'Login failed',
-        description: error.response?.data?.message || 'Something went wrong',
-        status: 'error',
+        title: "Login failed",
+        description: error.response?.data?.message || "Something went wrong",
+        status: "error",
         duration: 3000,
       });
     }

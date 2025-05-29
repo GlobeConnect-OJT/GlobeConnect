@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Image,
@@ -13,21 +13,21 @@ import {
   Flex,
   Spacer,
   Badge,
-  useDisclosure
-} from '@chakra-ui/react';
-import { FaComment, FaMapMarkerAlt, FaCalendarAlt } from 'react-icons/fa';
-import { formatDistanceToNow } from 'date-fns';
-import { Link } from 'react-router-dom';
-import LikeButton from '../likes/LikeButton';
-import CommentSection from '../comments/CommentSection';
-import { joinPostRoom, leavePostRoom } from '../../utils/socket';
+  useDisclosure,
+} from "@chakra-ui/react";
+import { FaComment, FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
+import { formatDistanceToNow } from "date-fns";
+import { Link } from "react-router-dom";
+import LikeButton from "../likes/LikeButton";
+import CommentSection from "../comments/CommentSection";
+import { joinPostRoom, leavePostRoom } from "../../utils/socket";
 
-const PostCard = ({ post, columnWidth = '300px' }) => {
+const PostCard = ({ post, columnWidth = "300px" }) => {
   const { isOpen, onToggle } = useDisclosure();
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.700', 'gray.200');
-  
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+  const textColor = useColorModeValue("gray.700", "gray.200");
+
   // Join post room when comments are opened
   const handleToggleComments = () => {
     if (!isOpen) {
@@ -48,7 +48,7 @@ const PostCard = ({ post, columnWidth = '300px' }) => {
       borderColor={borderColor}
       boxShadow="sm"
       transition="all 0.3s"
-      _hover={{ boxShadow: 'md', transform: 'translateY(-2px)' }}
+      _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
       mb={4}
     >
       {/* Post Image */}
@@ -72,37 +72,39 @@ const PostCard = ({ post, columnWidth = '300px' }) => {
           <Heading as="h3" size="md" noOfLines={2}>
             {post.title}
           </Heading>
-          
+
           {/* Location Badge */}
-          {post.location && (
+          {post.stateName && (
             <HStack spacing={1}>
               <FaMapMarkerAlt size="0.8em" color="gray" />
               <Text fontSize="sm" color="gray.500" noOfLines={1}>
-                {post.location.name}
+                {post.stateName}
               </Text>
             </HStack>
           )}
 
           {/* Post Description */}
           <Text fontSize="sm" color={textColor} noOfLines={3}>
-            {post.content}
+            {post.description}
           </Text>
 
           {/* Author and Date */}
           <HStack mt={2} spacing={2}>
-            <Avatar 
-              size="xs" 
-              name={post.user?.name} 
-              src={post.user?.avatar} 
+            <Avatar
+              size="xs"
+              name={post.author?.username || post.user?.name}
+              src={post.author?.avatar || post.user?.avatar}
             />
             <Text fontSize="xs" color="gray.500">
-              {post.user?.name}
+              {post.author?.username || post.user?.name || "Anonymous"}
             </Text>
             <Spacer />
             <HStack spacing={1}>
               <FaCalendarAlt size="0.7em" />
               <Text fontSize="xs" color="gray.500">
-                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(post.createdAt), {
+                  addSuffix: true,
+                })}
               </Text>
             </HStack>
           </HStack>
@@ -110,7 +112,7 @@ const PostCard = ({ post, columnWidth = '300px' }) => {
           {/* Like and Comment Actions */}
           <Flex mt={2} align="center" justify="space-between">
             <LikeButton postId={post._id} initialLikes={post.likes} />
-            
+
             <HStack spacing={1} onClick={handleToggleComments} cursor="pointer">
               <IconButton
                 icon={<FaComment />}
@@ -125,12 +127,12 @@ const PostCard = ({ post, columnWidth = '300px' }) => {
       </Box>
 
       {/* Comment Section (Collapsible) */}
-      <CommentSection 
-        postId={post._id} 
-        initialComments={post.comments} 
+      <CommentSection
+        postId={post._id}
+        initialComments={post.comments}
         initialLikes={post.likes}
-        isOpen={isOpen} 
-        onToggle={handleToggleComments} 
+        isOpen={isOpen}
+        onToggle={handleToggleComments}
       />
     </Box>
   );

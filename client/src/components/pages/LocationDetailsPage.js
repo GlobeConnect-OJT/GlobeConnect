@@ -51,21 +51,25 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteId, setFavoriteId] = useState(null);
   const [isLoadingFavorite, setIsLoadingFavorite] = useState(false);
-  
+
   const authContext = useAuth();
   const user = authContext?.user || null;
-  const { isOpen: isCreateModalOpen, onOpen: onCreateModalOpen, onClose: onCreateModalClose } = useDisclosure();
+  const {
+    isOpen: isCreateModalOpen,
+    onOpen: onCreateModalOpen,
+    onClose: onCreateModalClose,
+  } = useDisclosure();
   const toast = useToast();
 
   // Initialize socket connection
   useEffect(() => {
     // Initialize socket connection when component mounts
     const socket = initSocket();
-    
+
     // Listen for post updates
-    socket.on('post-update', (updatedPost) => {
-      setPosts(prevPosts => {
-        return prevPosts.map(post => {
+    socket.on("post-update", (updatedPost) => {
+      setPosts((prevPosts) => {
+        return prevPosts.map((post) => {
           if (post._id === updatedPost._id) {
             return updatedPost;
           }
@@ -73,10 +77,10 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         });
       });
     });
-    
+
     return () => {
       // Clean up socket listeners when component unmounts
-      socket.off('post-update');
+      socket.off("post-update");
     };
   }, []);
 
@@ -86,7 +90,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       // Validate coordinates
       const latitude = parseFloat(lat);
       const longitude = parseFloat(lng);
-      
+
       if (isNaN(latitude) || isNaN(longitude)) {
         console.error("Invalid coordinates:", { lat, lng });
         setIsMasterAppLoading(false);
@@ -144,7 +148,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     setIsLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:5000/api/posts/state/${encodeURIComponent(stateName)}`
+        `http://localhost:5000/api/posts/state/${encodeURIComponent(stateName)}`,
       );
 
       if (!response.ok) {
@@ -169,7 +173,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       setIsLoading(false);
     }
   };
-  
+
   // Handle creating a new post
   const handleCreatePost = () => {
     // Open create post modal
@@ -219,7 +223,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
         // Add to favorites
         const latitude = parseFloat(lat);
         const longitude = parseFloat(lng);
-        
+
         if (isNaN(latitude) || isNaN(longitude)) {
           toast({
             title: "Error",
@@ -255,7 +259,8 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       console.error("Error toggling favorite:", error);
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to update favorites",
+        description:
+          error.response?.data?.message || "Failed to update favorites",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -270,7 +275,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     isLoading: isHistoryLoading,
     error: historyError,
   } = useLocationHistory(
-    locationInfo?.state || locationInfo?.country || locationInfo?.city
+    locationInfo?.state || locationInfo?.country || locationInfo?.city,
   );
 
   const bgColor = useColorModeValue("white", "gray.800");
@@ -288,8 +293,8 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   // Handle post creation success
   const handlePostCreated = (newPost) => {
     // Add the new post to the posts array
-    setPosts(prevPosts => [newPost, ...prevPosts]);
-    
+    setPosts((prevPosts) => [newPost, ...prevPosts]);
+
     toast({
       title: "Post created",
       description: "Your post has been created successfully",
@@ -307,17 +312,17 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
       bg={useColorModeValue("gray.50", "gray.900")}
     >
       <NavBarView />
-      
+
       {/* Create Post Modal */}
-      <CreatePostModal 
-        isOpen={isCreateModalOpen} 
-        onClose={onCreateModalClose} 
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={onCreateModalClose}
         locationInfo={{
           city: locationInfo?.city,
           state: locationInfo?.state,
           country: locationInfo?.country,
           latitude: !isNaN(parseFloat(lat)) ? parseFloat(lat) : 0,
-          longitude: !isNaN(parseFloat(lng)) ? parseFloat(lng) : 0
+          longitude: !isNaN(parseFloat(lng)) ? parseFloat(lng) : 0,
         }}
         onPostCreated={handlePostCreated}
       />
@@ -352,7 +357,9 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
                       isLoading={isLoadingFavorite}
                       onClick={handleFavoriteToggle}
                       aria-label={
-                        isFavorite ? "Remove from favorites" : "Add to favorites"
+                        isFavorite
+                          ? "Remove from favorites"
+                          : "Add to favorites"
                       }
                     />
                   </Tooltip>
@@ -414,9 +421,9 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
                       },
                     }}
                   >
-                    <KanbanBoard 
-                      posts={posts} 
-                      isLoading={isLoading} 
+                    <KanbanBoard
+                      posts={posts}
+                      isLoading={isLoading}
                       onCreatePost={user ? handleCreatePost : undefined}
                     />
                   </Box>

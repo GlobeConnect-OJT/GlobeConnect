@@ -17,6 +17,8 @@ router.route("/:id").delete(favoritesController.removeFavorite);
 router.route("/check/:lat/:lng").get(favoritesController.checkFavorite);
 
 // New route for checking favorites by state
-router.route("/check-state/:stateName").get(favoritesController.checkFavoriteByState);
+router
+  .route("/check-state/:stateName")
+  .get(favoritesController.checkFavoriteByState);
 
-module.exports = router; 
+module.exports = router;

@@ -24,8 +24,8 @@ import { SocketProvider } from "./context/SocketContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LocationDetailsPage from "./components/pages/LocationDetailsPage";
-import ProfilePage from './components/pages/ProfilePage';
-import FavoritesPage from './components/pages/FavoritesPage';
+import ProfilePage from "./components/pages/ProfilePage";
+import FavoritesPage from "./components/pages/FavoritesPage";
 
 const App = (props) => {
   /*  Life-cycles Methods */
@@ -109,7 +109,9 @@ const App = (props) => {
                     element={<LocationDetailsPage />}
                   />
                 </Routes>
-                {isMasterAppLoading && !lodash.isNil(colorMode) && renderLoader()}
+                {isMasterAppLoading &&
+                  !lodash.isNil(colorMode) &&
+                  renderLoader()}
               </Box>
             </ChakraProvider>
           </NotificationProvider>

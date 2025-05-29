@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import {
   Modal,
   ModalOverlay,
@@ -23,14 +23,17 @@ import {
   useColorModeValue,
   Progress,
   Icon,
-} from '@chakra-ui/react';
-import { FaUpload, FaTimes, FaImage } from 'react-icons/fa';
-import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+} from "@chakra-ui/react";
+import { FaUpload, FaTimes, FaImage } from "react-icons/fa";
+import { useAuth } from "../../context/AuthContext";
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:5000/api";
+const MAX_CHAR_COUNT = 2000;
 
 const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [images, setImages] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageErrors, setImageErrors] = useState({});
@@ -38,10 +41,9 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
   const fileInputRef = useRef(null);
   const toast = useToast();
   const { user, token } = useAuth();
-  
-  const MAX_CHAR_COUNT = 500;
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
+
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   // Handle content change with character count
   const handleContentChange = (e) => {
@@ -55,30 +57,30 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
   // Handle file selection
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
-    
+
     // Preview images
-    const newImages = files.map(file => ({
+    const newImages = files.map((file) => ({
       file,
       preview: URL.createObjectURL(file),
-      isUploading: false
+      isUploading: false,
     }));
-    
-    setImages(prev => [...prev, ...newImages]);
+
+    setImages((prev) => [...prev, ...newImages]);
   };
 
   // Handle image removal
   const handleRemoveImage = (index) => {
-    setImages(prev => {
+    setImages((prev) => {
       const newImages = [...prev];
       // Revoke object URL to prevent memory leaks
       URL.revokeObjectURL(newImages[index].preview);
       newImages.splice(index, 1);
       return newImages;
     });
-    
+
     // Clear any error for this image
-    setImageErrors(prev => {
-      const newErrors = {...prev};
+    setImageErrors((prev) => {
+      const newErrors = { ...prev };
       delete newErrors[index];
       return newErrors;
     });
@@ -87,86 +89,93 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (!title.trim()) {
       toast({
-        title: 'Title required',
-        description: 'Please enter a title for your post',
-        status: 'error',
+        title: "Title required",
+        description: "Please enter a title for your post",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
       return;
     }
-    
+
     if (!content.trim()) {
       toast({
-        title: 'Content required',
-        description: 'Please enter some content for your post',
-        status: 'error',
+        title: "Content required",
+        description: "Please enter some content for your post",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append('title', title);
-      formData.append('content', content);
-      
-      // Add location info if available
-      if (locationInfo) {
-        formData.append('location[name]', locationInfo.city || locationInfo.state || locationInfo.country || 'Unknown');
-        formData.append('location[coordinates][0]', locationInfo.longitude || 0);
-        formData.append('location[coordinates][1]', locationInfo.latitude || 0);
+      formData.append("title", title);
+      formData.append("description", content);
+
+      // Add state name from location info
+      if (locationInfo && locationInfo.state) {
+        formData.append("stateName", locationInfo.state);
+      } else if (locationInfo && locationInfo.city) {
+        formData.append("stateName", locationInfo.city);
+      } else if (locationInfo && locationInfo.country) {
+        formData.append("stateName", locationInfo.country);
+      } else {
+        formData.append("stateName", "Unknown Location");
       }
-      
+
       // Add images
-      images.forEach(image => {
-        formData.append('images', image.file);
+      images.forEach((image) => {
+        formData.append("images", image.file);
       });
-      
+
       // Send request
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`
-        }
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
       };
-      
-      const response = await axios.post('/api/posts', formData, config);
-      
+
+      const response = await axios.post(
+        `${API_BASE_URL}/posts`,
+        formData,
+        config,
+      );
+
       // Show success message
       toast({
-        title: 'Post created',
-        description: 'Your post has been created successfully',
-        status: 'success',
+        title: "Post created",
+        description: "Your post has been created successfully",
+        status: "success",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
-      
+
       // Call callback function to refresh posts
       if (onPostCreated) {
         onPostCreated(response.data.data.post);
       }
-      
+
       // Reset form and close modal
       resetForm();
       onClose();
-      
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error("Error creating post:", error);
       toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'Failed to create post',
-        status: 'error',
+        title: "Error",
+        description: error.response?.data?.message || "Failed to create post",
+        status: "error",
         duration: 3000,
-        isClosable: true
+        isClosable: true,
       });
     } finally {
       setIsSubmitting(false);
@@ -175,12 +184,12 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
 
   // Reset form
   const resetForm = () => {
-    setTitle('');
-    setContent('');
+    setTitle("");
+    setContent("");
     setCharacterCount(0);
-    
+
     // Revoke object URLs to prevent memory leaks
-    images.forEach(image => {
+    images.forEach((image) => {
       URL.revokeObjectURL(image.preview);
     });
     setImages([]);
@@ -191,7 +200,7 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
   React.useEffect(() => {
     return () => {
       // Revoke object URLs to prevent memory leaks
-      images.forEach(image => {
+      images.forEach((image) => {
         URL.revokeObjectURL(image.preview);
       });
     };
@@ -207,30 +216,37 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
           <VStack spacing={4} align="stretch">
             <FormControl isRequired>
               <FormLabel>Title</FormLabel>
-              <Input 
-                value={title} 
-                onChange={(e) => setTitle(e.target.value)} 
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter a title for your post"
                 disabled={isSubmitting}
               />
             </FormControl>
-            
+
             <FormControl isRequired>
               <FormLabel>Content</FormLabel>
-              <Textarea 
-                value={content} 
-                onChange={handleContentChange} 
+              <Textarea
+                value={content}
+                onChange={handleContentChange}
                 placeholder="Share your experience..."
                 minH="150px"
                 disabled={isSubmitting}
               />
               <Flex justify="flex-end" mt={1}>
-                <Text fontSize="sm" color={characterCount > MAX_CHAR_COUNT * 0.8 ? "orange.500" : "gray.500"}>
+                <Text
+                  fontSize="sm"
+                  color={
+                    characterCount > MAX_CHAR_COUNT * 0.8
+                      ? "orange.500"
+                      : "gray.500"
+                  }
+                >
                   {characterCount}/{MAX_CHAR_COUNT}
                 </Text>
               </Flex>
             </FormControl>
-            
+
             <FormControl>
               <FormLabel>Images</FormLabel>
               <Box
@@ -241,7 +257,7 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
                 textAlign="center"
                 cursor="pointer"
                 onClick={() => fileInputRef.current.click()}
-                _hover={{ bg: useColorModeValue('gray.50', 'gray.700') }}
+                _hover={{ bg: useColorModeValue("gray.50", "gray.700") }}
               >
                 <input
                   type="file"
@@ -249,7 +265,7 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
                   accept="image/*"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                   disabled={isSubmitting}
                 />
                 <VStack spacing={2}>
@@ -260,15 +276,15 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
                   </Text>
                 </VStack>
               </Box>
-              
+
               {/* Image previews */}
               {images.length > 0 && (
                 <Flex mt={4} flexWrap="wrap" gap={2}>
                   {images.map((image, index) => (
-                    <Box 
-                      key={index} 
-                      position="relative" 
-                      width="100px" 
+                    <Box
+                      key={index}
+                      position="relative"
+                      width="100px"
                       height="100px"
                       borderRadius="md"
                       overflow="hidden"
@@ -282,18 +298,18 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
                         w="100%"
                         h="100%"
                         onError={() => {
-                          setImageErrors(prev => ({
+                          setImageErrors((prev) => ({
                             ...prev,
-                            [index]: 'Failed to load image'
+                            [index]: "Failed to load image",
                           }));
                         }}
                       />
                       {imageErrors[index] && (
-                        <Box 
-                          position="absolute" 
-                          bottom="0" 
-                          w="100%" 
-                          bg="red.500" 
+                        <Box
+                          position="absolute"
+                          bottom="0"
+                          w="100%"
+                          bg="red.500"
                           color="white"
                           fontSize="xs"
                           p={1}
@@ -325,12 +341,19 @@ const CreatePostModal = ({ isOpen, onClose, locationInfo, onPostCreated }) => {
         </ModalBody>
 
         <ModalFooter>
-          {isSubmitting && <Progress size="xs" isIndeterminate flex="1" mr={4} />}
-          <Button variant="ghost" mr={3} onClick={onClose} disabled={isSubmitting}>
+          {isSubmitting && (
+            <Progress size="xs" isIndeterminate flex="1" mr={4} />
+          )}
+          <Button
+            variant="ghost"
+            mr={3}
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>
-          <Button 
-            colorScheme="blue" 
+          <Button
+            colorScheme="blue"
             onClick={handleSubmit}
             isLoading={isSubmitting}
             loadingText="Creating..."

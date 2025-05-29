@@ -18,4 +18,4 @@ router.patch("/:id/read", protect, notificationController.markAsRead);
 // Delete notification
 router.delete("/:id", protect, notificationController.deleteNotification);
 
-module.exports = router; 
+module.exports = router;

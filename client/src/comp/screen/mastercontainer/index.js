@@ -12,50 +12,49 @@ import SearchPlaceView from "../searchplaceview";
 const { MasterDrawerMenuType, AppNotifKey } = Constants;
 
 const MasterContainer = (props) => {
-	const { userConfig } = props;
+  const { userConfig } = props;
 
-	const [state, setState] = useState({});
+  const [state, setState] = useState({});
 
-	const updateState = (data) =>
-		setState((preState) => ({ ...preState, ...data }));
+  const updateState = (data) =>
+    setState((preState) => ({ ...preState, ...data }));
 
-	const { isOpen, onOpen, onClose } = useDisclosure();
-	const btnRef = useRef();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const btnRef = useRef();
 
-	/*  Life-cycles Methods */
+  /*  Life-cycles Methods */
 
-	/*  Public Interface Methods */
+  /*  Public Interface Methods */
 
-	/*  UI Events Methods   */
+  /*  UI Events Methods   */
 
-	/*  Server Request Methods  */
+  /*  Server Request Methods  */
 
-	/*  Server Response Methods  */
+  /*  Server Response Methods  */
 
-	/*  Server Response Handler Methods  */
+  /*  Server Response Handler Methods  */
 
-	/*  Custom-Component sub-render Methods */
+  /*  Custom-Component sub-render Methods */
 
-	const renderMasterContainer = () => {
-		return <SearchPlaceView menuType={MasterDrawerMenuType.Search} />;
-	};
+  const renderMasterContainer = () => {
+    return <SearchPlaceView menuType={MasterDrawerMenuType.Search} />;
+  };
 
-	return renderMasterContainer();
+  return renderMasterContainer();
 };
 
 const mapStateToProps = (state) => {
-	return {
-		userConfig: state.userConfig,
-		userPref: state.userPref,
-	};
+  return {
+    userConfig: state.userConfig,
+    userPref: state.userPref,
+  };
 };
 
 const mapDispatchToProps = (dispatch) => {
-	return {
-		setUserConfig: (userConfig) =>
-			dispatch(Actions.setUserConfig(userConfig)),
-		setUserPref: (userPref) => dispatch(Actions.setUserPref(userPref)),
-	};
+  return {
+    setUserConfig: (userConfig) => dispatch(Actions.setUserConfig(userConfig)),
+    setUserPref: (userPref) => dispatch(Actions.setUserPref(userPref)),
+  };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(MasterContainer);
