@@ -58,6 +58,18 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Join a room for specific post
+  socket.on("join-post", (postId) => {
+    socket.join(`post:${postId}`);
+    console.log(`Socket ${socket.id} joined room for post: ${postId}`);
+  });
+
+  // Leave a post room
+  socket.on("leave-post", (postId) => {
+    socket.leave(`post:${postId}`);
+    console.log(`Socket ${socket.id} left room for post: ${postId}`);
+  });
+
   // Handle disconnect
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);

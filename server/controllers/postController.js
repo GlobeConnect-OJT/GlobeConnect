@@ -108,6 +108,10 @@ exports.getAllPosts = async (req, res, next) => {
         path: "author",
         select: "username",
       })
+      .populate({
+        path: "comments.user",
+        select: "username",
+      })
       .sort(sortOptions)
       .select(fieldSelection)
       .skip(skip)
@@ -148,6 +152,10 @@ exports.getCurrentUserPosts = async (req, res, next) => {
       .populate({
         path: "author",
         select: "username email",
+      })
+      .populate({
+        path: "comments.user",
+        select: "username",
       })
       .sort(sortOptions)
       .select(fieldSelection)
@@ -363,6 +371,10 @@ exports.getPostsByState = async (req, res, next) => {
         path: "author",
         select: "username",
       })
+      .populate({
+        path: "comments.user",
+        select: "username",
+      })
       .sort(sortOptions)
       .select(fieldSelection)
       .skip(skip)
@@ -406,6 +418,10 @@ exports.getPostsByUser = async (req, res, next) => {
     const posts = await Post.find(baseCondition)
       .populate({
         path: "author",
+        select: "username",
+      })
+      .populate({
+        path: "comments.user",
         select: "username",
       })
       .sort(sortOptions)
