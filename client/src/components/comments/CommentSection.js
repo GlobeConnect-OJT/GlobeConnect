@@ -205,24 +205,13 @@ const CommentSection = ({
         mt={2}
         boxShadow="sm"
       >
-        {/* Like section */}
-        <HStack mb={4} spacing={2}>
-          <IconButton
-            icon={hasLiked ? <FaHeart color="red" /> : <FaRegHeart />}
-            aria-label={hasLiked ? "Unlike" : "Like"}
-            variant="ghost"
-            onClick={handleToggleLike}
-            isDisabled={!user}
-          />
-          <Text fontSize="sm">{likes.length} likes</Text>
-
-          <Flex flex={1} justifyContent="flex-end">
-            <HStack>
-              <FaComment />
-              <Text fontSize="sm">{comments.length} comments</Text>
-            </HStack>
-          </Flex>
-        </HStack>
+        {/* Comment count */}
+        <Flex mb={4} justifyContent="flex-end">
+          <HStack>
+            <FaComment />
+            <Text fontSize="sm">{comments.length} comments</Text>
+          </HStack>
+        </Flex>
 
         <Divider mb={4} />
 

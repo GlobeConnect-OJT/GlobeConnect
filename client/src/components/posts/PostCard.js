@@ -14,19 +14,27 @@ import {
   Spacer,
   Badge,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-import { FaComment, FaMapMarkerAlt, FaCalendarAlt } from "react-icons/fa";
+import { FaComment, FaMapMarkerAlt, FaCalendarAlt, FaHeart, FaRegHeart } from "react-icons/fa";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";
-import LikeButton from "../likes/LikeButton";
 import CommentSection from "../comments/CommentSection";
 import { joinPostRoom, leavePostRoom } from "../../utils/socket";
+import { useAuth } from "../../context/AuthContext";
+import axios from "axios";
+
+const API_BASE_URL = `${process.env.REACT_APP_API_URL}/api`;
 
 const PostCard = ({ post, columnWidth = "300px" }) => {
   const { isOpen, onToggle } = useDisclosure();
   const bgColor = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.700", "gray.200");
+  const [likes, setLikes] = useState(post.likes || []);
+  const [isLiking, setIsLiking] = useState(false);
+  const { user, token } = useAuth();
+  const toast = useToast();
 
   // Join post room when comments are opened
   const handleToggleComments = () => {
@@ -38,99 +46,148 @@ const PostCard = ({ post, columnWidth = "300px" }) => {
     onToggle();
   };
 
+  // Handle like/unlike
+  const handleToggleLike = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to like posts",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      setIsLiking(true);
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+      };
+
+      await axios.post(`${API_BASE_URL}/posts/${post._id}/like`, {}, config);
+      // Likes will be updated via socket.io
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to toggle like",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  // Check if current user has liked the post
+  const hasLiked = user ? likes.some((like) => like.toString() === user._id) : false;
+
   return (
     <Box
-      w={columnWidth}
-      borderWidth="1px"
-      borderRadius="lg"
-      overflow="hidden"
+      width={columnWidth}
       bg={bgColor}
+      borderRadius="lg"
+      borderWidth="1px"
       borderColor={borderColor}
-      boxShadow="sm"
-      transition="all 0.3s"
-      _hover={{ boxShadow: "md", transform: "translateY(-2px)" }}
-      mb={4}
+      overflow="hidden"
+      shadow="sm"
+      _hover={{ shadow: "md" }}
+      transition="all 0.2s"
     >
-      {/* Post Image */}
-      {post.images && post.images.length > 0 && (
-        <Box position="relative" h="200px">
-          <Image
-            src={post.images[0]}
-            alt={post.title}
-            objectFit="cover"
-            w="100%"
-            h="100%"
-            fallbackSrc="https://via.placeholder.com/300x200?text=No+Image"
-          />
-        </Box>
-      )}
-
-      {/* Post Content */}
-      <Box p={4}>
-        <Stack spacing={2}>
-          {/* Title and Location */}
-          <Heading as="h3" size="md" noOfLines={2}>
-            {post.title}
-          </Heading>
-
-          {/* Location Badge */}
-          {post.stateName && (
-            <HStack spacing={1}>
-              <FaMapMarkerAlt size="0.8em" color="gray" />
-              <Text fontSize="sm" color="gray.500" noOfLines={1}>
-                {post.stateName}
-              </Text>
-            </HStack>
-          )}
-
-          {/* Post Description */}
-          <Text fontSize="sm" color={textColor} noOfLines={3}>
-            {post.description}
-          </Text>
-
-          {/* Author and Date */}
-          <HStack mt={2} spacing={2}>
-            <Avatar
-              size="xs"
-              name={post.author?.username || post.user?.name}
-              src={post.author?.avatar || post.user?.avatar}
+      <Stack spacing={0}>
+        {/* Post Image */}
+        {post.images && post.images.length > 0 && (
+          <Box position="relative" height="200px">
+            <Image
+              src={post.images[0]}
+              alt={post.title}
+              objectFit="cover"
+              width="100%"
+              height="100%"
             />
-            <Text fontSize="xs" color="gray.500">
-              {post.author?.username || post.user?.name || "Anonymous"}
+          </Box>
+        )}
+
+        {/* Post Content */}
+        <Box p={4}>
+          <Stack spacing={3}>
+            <Heading size="md" noOfLines={2}>
+              {post.title}
+            </Heading>
+            <Text color={textColor} noOfLines={3}>
+              {post.description}
             </Text>
-            <Spacer />
-            <HStack spacing={1}>
-              <FaCalendarAlt size="0.7em" />
-              <Text fontSize="xs" color="gray.500">
-                {formatDistanceToNow(new Date(post.createdAt), {
-                  addSuffix: true,
-                })}
-              </Text>
-            </HStack>
-          </HStack>
 
-          {/* Like and Comment Actions */}
-          <Flex mt={2} align="center" justify="space-between">
-            <LikeButton postId={post._id} initialLikes={post.likes} />
+            {/* Location Badge */}
+            {post.stateName && (
+              <HStack>
+                <FaMapMarkerAlt size="0.8em" />
+                <Badge colorScheme="blue" variant="subtle">
+                  {post.stateName}
+                </Badge>
+              </HStack>
+            )}
 
-            <HStack spacing={1} onClick={handleToggleComments} cursor="pointer">
-              <IconButton
-                icon={<FaComment />}
-                aria-label="Comments"
-                variant="ghost"
-                size="sm"
+            {/* Author and Time */}
+            <HStack mt={2} spacing={2}>
+              <Avatar
+                size="xs"
+                name={post.author?.username || post.user?.name}
+                src={post.author?.avatar || post.user?.avatar}
               />
-              <Text fontSize="sm">{post.comments?.length || 0}</Text>
+              <Text fontSize="xs" color="gray.500">
+                {post.author?.username || post.user?.name || "Anonymous"}
+              </Text>
+              <Spacer />
+              <HStack spacing={1}>
+                <FaCalendarAlt size="0.7em" />
+                <Text fontSize="xs" color="gray.500">
+                  {formatDistanceToNow(new Date(post.createdAt), {
+                    addSuffix: true,
+                  })}
+                </Text>
+              </HStack>
             </HStack>
-          </Flex>
-        </Stack>
-      </Box>
+
+            {/* Like and Comment Actions */}
+            <Flex mt={2} align="center" justify="space-between">
+              <HStack spacing={1}>
+                <IconButton
+                  icon={hasLiked ? <FaHeart color="red" /> : <FaRegHeart />}
+                  aria-label={hasLiked ? "Unlike" : "Like"}
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleToggleLike}
+                  isLoading={isLiking}
+                  isDisabled={!user}
+                />
+                <Text fontSize="sm">{likes.length}</Text>
+              </HStack>
+
+              <HStack spacing={1} onClick={handleToggleComments} cursor="pointer">
+                <IconButton
+                  icon={<FaComment />}
+                  aria-label="Comments"
+                  variant="ghost"
+                  size="sm"
+                />
+                <Text fontSize="sm">{post.comments?.length || 0}</Text>
+              </HStack>
+            </Flex>
+          </Stack>
+        </Box>
+      </Stack>
 
       {/* Comment Section (Collapsible) */}
       <CommentSection
         postId={post._id}
         initialComments={post.comments}
-        initialLikes={post.likes}
+        initialLikes={likes}
         isOpen={isOpen}
         onToggle={handleToggleComments}
       />
