@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
- const API_BASE_URL =
-    process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export const useLocationHistory = (locationName) => {
   const [history, setHistory] = useState(null);
@@ -15,12 +14,17 @@ export const useLocationHistory = (locationName) => {
       setHistory(null);
       setError(null);
 
+      // Debug log
+      console.log("Fetching history for location:", locationName);
+      console.log("API Base URL:", API_BASE_URL);
+
       // Validate locationName
       if (
         !locationName ||
         typeof locationName !== "string" ||
         !locationName.trim()
       ) {
+        console.log("Invalid location name:", locationName);
         setError("Invalid location name");
         return;
       }
@@ -29,17 +33,27 @@ export const useLocationHistory = (locationName) => {
 
       try {
         const sanitizedLocation = locationName.trim();
-        const response = await axios.get(
-          `${API_BASE_URL}/history/${encodeURIComponent(sanitizedLocation)}`,
-        );
+        const url = `${API_BASE_URL}/history/${encodeURIComponent(sanitizedLocation)}`;
+        console.log("Making request to:", url);
+        
+        const response = await axios.get(url);
+
+        console.log("History API response:", response.data);
 
         if (response.data.status === "success") {
           setHistory(response.data.data.history);
         } else {
+          console.log("No history data in response:", response.data);
           setError("No history data available");
         }
       } catch (err) {
         console.error("Error fetching history:", err);
+        console.error("Error details:", {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status,
+          url: err.config?.url
+        });
         setError(
           err.response?.data?.message ||
             "Failed to fetch history. Please try again later.",
