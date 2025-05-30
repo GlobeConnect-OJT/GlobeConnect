@@ -49,9 +49,11 @@ const MasterGlobeView = (props) => {
 
   // Enhanced mobile detection
   const isMobileDevice = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    ) || window.innerWidth < 768;
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      ) || window.innerWidth < 768
+    );
   };
 
   const suncalcOptionObj = useRef({
@@ -91,7 +93,7 @@ const MasterGlobeView = (props) => {
   // Enhanced pointer event handler for mobile compatibility
   const getPointerPosition = (event, element) => {
     let clientX, clientY;
-    
+
     if (event.touches && event.touches.length > 0) {
       // Touch event
       clientX = event.touches[0].clientX;
@@ -113,13 +115,14 @@ const MasterGlobeView = (props) => {
   useEffect(() => {
     // Detect mobile device
     updateState({ isMobile: isMobileDevice() });
-    
+
     // Add viewport meta tag for mobile if not present
     if (isMobileDevice() && !document.querySelector('meta[name="viewport"]')) {
-      const viewport = document.createElement('meta');
-      viewport.name = 'viewport';
-      viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-      document.getElementsByTagName('head')[0].appendChild(viewport);
+      const viewport = document.createElement("meta");
+      viewport.name = "viewport";
+      viewport.content =
+        "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+      document.getElementsByTagName("head")[0].appendChild(viewport);
     }
 
     initData();
@@ -186,9 +189,9 @@ const MasterGlobeView = (props) => {
     }
 
     const isMobile = isMobileDevice();
-    
+
     // Enhanced zoom configuration for mobile
-    const zoomConfig = isMobile 
+    const zoomConfig = isMobile
       ? { scaleExtent: [0.3, 4], duration: 300 }
       : { scaleExtent: [0.5, 8], duration: 200 };
 
@@ -244,7 +247,7 @@ const MasterGlobeView = (props) => {
       userCountryID: null,
       canvas: d3.select(canvasRef.current),
       canvasOp: d3.select(canvasOpRef.current),
-      
+
       // Touch tracking for mobile
       lastTouchDistance: 0,
       touchStartTime: 0,
@@ -299,7 +302,7 @@ const MasterGlobeView = (props) => {
   const setupCanvasEvents = () => {
     const { canvas, width, height, isMobile } = globeDataObj.current;
     const canvasNode = canvas.node();
-    
+
     // Remove existing listeners
     canvas.on(".drag", null);
     canvas.on(".zoom", null);
@@ -308,11 +311,17 @@ const MasterGlobeView = (props) => {
 
     if (isMobile) {
       // Mobile touch events
-      canvasNode.addEventListener("touchstart", handleTouchStart, { passive: false });
-      canvasNode.addEventListener("touchmove", handleTouchMove, { passive: false });
-      canvasNode.addEventListener("touchend", handleTouchEnd, { passive: false });
+      canvasNode.addEventListener("touchstart", handleTouchStart, {
+        passive: false,
+      });
+      canvasNode.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      canvasNode.addEventListener("touchend", handleTouchEnd, {
+        passive: false,
+      });
       canvasNode.addEventListener("click", handleClick, { passive: true });
-      
+
       // Prevent default touch behaviors
       canvasNode.style.touchAction = "none";
     } else {
@@ -343,10 +352,10 @@ const MasterGlobeView = (props) => {
   // Enhanced touch event handlers
   const handleTouchStart = (event) => {
     event.preventDefault();
-    
+
     const { canvas } = globeDataObj.current;
     const touches = event.touches;
-    
+
     updateGlobeData({
       touchStartTime: Date.now(),
       isMultiTouch: touches.length > 1,
@@ -371,9 +380,9 @@ const MasterGlobeView = (props) => {
       const touch2 = touches[1];
       const distance = Math.sqrt(
         Math.pow(touch2.clientX - touch1.clientX, 2) +
-        Math.pow(touch2.clientY - touch1.clientY, 2)
+          Math.pow(touch2.clientY - touch1.clientY, 2)
       );
-      
+
       updateGlobeData({
         lastTouchDistance: distance,
       });
@@ -382,8 +391,9 @@ const MasterGlobeView = (props) => {
 
   const handleTouchMove = (event) => {
     event.preventDefault();
-    
-    const { canvas, v0, r0, q0, lastTouchDistance, isMultiTouch } = globeDataObj.current;
+
+    const { canvas, v0, r0, q0, lastTouchDistance, isMultiTouch } =
+      globeDataObj.current;
     const { projection } = elementRefObj.current;
     const touches = event.touches;
 
@@ -395,7 +405,7 @@ const MasterGlobeView = (props) => {
         const q1 = versor.multiply(q0, versor.delta(v0, v1));
         const r1 = versor.rotation(q1);
         r1[2] = 0; // Prevent roll
-        
+
         projection.rotate(r1);
         updateElementRef({ projection: projection });
         window.requestAnimationFrame(render);
@@ -406,30 +416,38 @@ const MasterGlobeView = (props) => {
       const touch2 = touches[1];
       const currentDistance = Math.sqrt(
         Math.pow(touch2.clientX - touch1.clientX, 2) +
-        Math.pow(touch2.clientY - touch1.clientY, 2)
+          Math.pow(touch2.clientY - touch1.clientY, 2)
       );
 
       if (lastTouchDistance > 0) {
-        const scale = currentDistance / lastTouchDistance;
+        const scaleRatio = currentDistance / lastTouchDistance;
         const { scaleFactor, minZoom, maxZoom } = globeDataObj.current;
-        const newScale = Math.min(Math.max(scaleFactor * scale, minZoom), maxZoom);
-        
+        const newScale = Math.min(
+          Math.max(scaleFactor * scaleRatio, minZoom),
+          maxZoom
+        );
+
         updateGlobeData({
           scaleFactor: newScale,
           lastTouchDistance: currentDistance,
         });
-        
+
         scale();
+      } else {
+        // Initialize lastTouchDistance for subsequent moves
+        updateGlobeData({
+          lastTouchDistance: currentDistance,
+        });
       }
     }
   };
 
   const handleTouchEnd = (event) => {
     event.preventDefault();
-    
+
     const { touchStartTime, isMultiTouch } = globeDataObj.current;
     const touchDuration = Date.now() - touchStartTime;
-    
+
     // Reset touch state
     updateGlobeData({
       v0: null,
@@ -440,7 +458,11 @@ const MasterGlobeView = (props) => {
     });
 
     // Handle tap (short touch on single finger)
-    if (!isMultiTouch && touchDuration < 300 && event.changedTouches.length === 1) {
+    if (
+      !isMultiTouch &&
+      touchDuration < 300 &&
+      event.changedTouches.length === 1
+    ) {
       setTimeout(() => {
         handleClick(event);
       }, 50); // Small delay to prevent conflicts
@@ -449,14 +471,14 @@ const MasterGlobeView = (props) => {
 
   const handleClick = (event) => {
     const { canvas } = globeDataObj.current;
-    
+
     // Create a synthetic event object for compatibility
     const syntheticEvent = {
       ...event,
       target: canvas.node(),
       currentTarget: canvas.node(),
     };
-    
+
     addClickedMarkerToFindCountry(syntheticEvent);
   };
 
@@ -621,7 +643,7 @@ const MasterGlobeView = (props) => {
 
     canvas.attr("width", canvasWidth).attr("height", canvasHeight);
     canvasOp.attr("width", canvasWidth).attr("height", canvasHeight);
-    
+
     // Scale context for high DPI displays (but not on mobile to save performance)
     if (!isMobile && pixelRatio > 1) {
       const context = canvas.node().getContext("2d");
@@ -700,7 +722,7 @@ const MasterGlobeView = (props) => {
     if (!textGroup) {
       let defs = svg.append("defs");
       const value = 0.19;
-    
+
       defs.html(`
         <filter id="blackOutlineEffect" color-interpolation-filters="sRGB">
           <feMorphology in="SourceAlpha" result="MORPH" operator="dilate" radius="2.0" />
@@ -712,12 +734,12 @@ const MasterGlobeView = (props) => {
           </feMerge>
         </filter>
       `);
-    
+
       textGroup = svgMarker
         .append("g")
         .attr("id", "text")
         .attr("clip-path", "url(#maskPath)");
-    
+
       textGroup
         .selectAll("text")
         .data(countries?.features)
@@ -877,7 +899,8 @@ const MasterGlobeView = (props) => {
   };
 
   const scale = () => {
-    let { width, height, scaleFactor, minZoom, maxZoom, isMobile } = globeDataObj.current;
+    let { width, height, scaleFactor, minZoom, maxZoom, isMobile } =
+      globeDataObj.current;
     let { projection } = elementRefObj.current;
 
     scaleFactor = Math.min(Math.max(scaleFactor, minZoom), maxZoom);
@@ -886,10 +909,10 @@ const MasterGlobeView = (props) => {
     // Enhanced zoom level thresholds for mobile
     const boundaryThreshold = isMobile ? 1.5 : 2;
     const labelThreshold = isMobile ? 2.5 : 3;
-    
+
     const showBoundaries = scaleFactor > boundaryThreshold;
     const showLabels = scaleFactor > labelThreshold;
-    
+
     if (
       state.showBoundaries !== showBoundaries ||
       state.showLabels !== showLabels
@@ -963,7 +986,7 @@ const MasterGlobeView = (props) => {
             reloadMarkerLineArray();
             renderMarker();
             addClickedMarkerToFindCountry(event);
-          }),
+          })
       );
 
     updateGlobeData({
@@ -991,14 +1014,11 @@ const MasterGlobeView = (props) => {
 
     selectedMarkerID = markerID;
 
-    // console.log("markerID: ", markerID)
     markerArray[markerIndex] = {
       id: markerID,
       long: pos[0],
       lat: pos[1],
     };
-
-    // console.log("markerArray: ", markerArray)
 
     markerArray = markerArray.slice();
     updateGlobeData({
@@ -1046,7 +1066,7 @@ const MasterGlobeView = (props) => {
           path,
         },
         water,
-        colorWater,
+        colorWater
       );
 
       fill(
@@ -1055,7 +1075,7 @@ const MasterGlobeView = (props) => {
           path,
         },
         water,
-        "#00000066",
+        "#00000066"
       );
 
       renderDayNightPath();
@@ -1067,7 +1087,7 @@ const MasterGlobeView = (props) => {
           path,
         },
         water,
-        colorWater,
+        colorWater
       );
     }
 
@@ -1077,7 +1097,7 @@ const MasterGlobeView = (props) => {
         path,
       },
       graticule,
-      colorGraticule,
+      colorGraticule
     );
 
     fill(
@@ -1086,7 +1106,7 @@ const MasterGlobeView = (props) => {
         path,
       },
       land,
-      colorLand,
+      colorLand
     );
 
     stroke(
@@ -1095,7 +1115,7 @@ const MasterGlobeView = (props) => {
         path,
       },
       countries,
-      "#00000088",
+      "#00000088"
     );
 
     if (enableDayNightMode) {
@@ -1173,7 +1193,7 @@ const MasterGlobeView = (props) => {
             scaleFactor,
             cityRadius,
             lightsColor,
-            opacity,
+            opacity
           );
         }
       }
@@ -1195,7 +1215,7 @@ const MasterGlobeView = (props) => {
         path,
       },
       geoPath,
-      "#74ccf466",
+      "#74ccf466"
     );
 
     stroke(
@@ -1204,7 +1224,7 @@ const MasterGlobeView = (props) => {
         path,
       },
       geoPath,
-      colorGraticule,
+      colorGraticule
     );
   };
 
@@ -1239,7 +1259,7 @@ const MasterGlobeView = (props) => {
       60,
       sunXYPos[0],
       sunXYPos[1],
-      70,
+      70
     );
     grd.addColorStop(0.2, "#fff2");
     grd.addColorStop(1, "#fff2");
@@ -1310,9 +1330,6 @@ const MasterGlobeView = (props) => {
 
     let { projection } = elementRefObj.current;
 
-    // console.log('currentCountry: ', currentCountry)
-    // landGroup.selectAll("path").remove();
-
     landGroup
       .selectAll("path")
       .data([currentCountry])
@@ -1361,7 +1378,6 @@ const MasterGlobeView = (props) => {
         updateGlobeData({
           currentCountry: currentCountry,
         });
-        // render()
         window.requestAnimationFrame(render);
       }
       return;
@@ -1374,7 +1390,6 @@ const MasterGlobeView = (props) => {
       currentCountry: currentCountry,
     });
 
-    // render();
     window.requestAnimationFrame(render);
   };
 
@@ -1414,7 +1429,7 @@ const MasterGlobeView = (props) => {
     let { projection } = elementRefObj.current;
 
     let v1 = versor.cartesian(
-      projection.rotate(r0).invert(d3.pointer(event, canvas.node())),
+      projection.rotate(r0).invert(d3.pointer(event, canvas.node()))
     );
     let q1 = versor.multiply(q0, versor.delta(v0, v1));
     let r1 = versor.rotation(q1);
@@ -1582,7 +1597,7 @@ const MasterGlobeView = (props) => {
 
     // Add this navigation
     navigate(
-      `/location/${selectedPlaceCoordinate.latitude}/${selectedPlaceCoordinate.longitude}`,
+      `/location/${selectedPlaceCoordinate.latitude}/${selectedPlaceCoordinate.longitude}`
     );
 
     await props.setUserConfig({
@@ -1669,7 +1684,7 @@ const MasterGlobeView = (props) => {
       .tween("rotate", () => {
         const r = d3.interpolate(
           [-center[0], -center[1]],
-          [-placeItem.longitude, -placeItem.latitude],
+          [-placeItem.longitude, -placeItem.latitude]
         );
         return (t) => {
           let { projection } = elementRefObj.current;
