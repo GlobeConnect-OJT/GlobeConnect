@@ -4,7 +4,7 @@ const buildQueryFilters = (queryString) => {
   const excludedFields = ["page", "sort", "limit", "fields", "search"];
   excludedFields.forEach((field) => delete queryObj[field]);
 
-  // Advanced filtering (with operators like gte, gt, lte, lt)
+  // Advanced filtering
   let queryStr = JSON.stringify(queryObj);
   queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 

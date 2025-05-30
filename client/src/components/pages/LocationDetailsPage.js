@@ -102,32 +102,61 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
   // Fetch location info
   useEffect(() => {
     const fetchLocationInfo = async () => {
+      // Debug logging
+      console.log("LocationDetailsPage: Starting fetch for coordinates:", {
+        lat,
+        lng,
+      });
+
       // Validate coordinates
       const latitude = parseFloat(lat);
       const longitude = parseFloat(lng);
 
       if (isNaN(latitude) || isNaN(longitude)) {
-        console.error("Invalid coordinates:", { lat, lng });
+        console.error("Invalid coordinates:", {
+          lat,
+          lng,
+          latitude,
+          longitude,
+        });
         setIsMasterAppLoading(false);
         setIsLoading(false);
         return;
       }
 
+      console.log("LocationDetailsPage: Valid coordinates:", {
+        latitude,
+        longitude,
+      });
       setIsLoading(true);
+
       try {
+        console.log(
+          "LocationDetailsPage: Calling getLocationFromCoordinates..."
+        );
         const data = await getLocationFromCoordinates({
           latitude,
           longitude,
         });
+
+        console.log("LocationDetailsPage: Received location data:", data);
         setLocationInfo(data);
-        if (data.state) {
+
+        if (data && data.state) {
+          console.log(
+            "LocationDetailsPage: Fetching posts for state:",
+            data.state
+          );
           await fetchPosts(data.state.toLowerCase());
+        } else {
+          console.log("LocationDetailsPage: No state found in location data");
         }
+
         // Set loading to false after everything is loaded
         setIsMasterAppLoading(false);
         setIsLoading(false);
       } catch (error) {
-        console.error("Error fetching location:", error);
+        console.error("LocationDetailsPage: Error fetching location:", error);
         setIsMasterAppLoading(false);
         setIsLoading(false);
       }
@@ -160,29 +189,45 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
 
   // Function to fetch posts
   const fetchPosts = async (stateName) => {
+    console.log(
+      "LocationDetailsPage: fetchPosts called with state:",
+      stateName
+    );
     setIsLoading(true);
+
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/posts/state/${encodeURIComponent(stateName)}`,
-      );
+      const url = `${
+        process.env.REACT_APP_API_URL
+      }/api/posts/state/${encodeURIComponent(stateName)}`;
+      console.log("LocationDetailsPage: Making request to URL:", url);
+
+      const response = await fetch(url);
+      console.log("LocationDetailsPage: Response status:", response.status);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("LocationDetailsPage: Response data:", data);
 
       if (data.status === "success" && Array.isArray(data.data.posts)) {
+        console.log(
+          "LocationDetailsPage: Setting posts:",
+          data.data.posts.length,
+          "posts"
+        );
         // Ensure we're setting the entire posts array
         setPosts(data.data.posts);
         // Set loading to false after posts are loaded
         setIsMasterAppLoading(false);
       } else {
+        console.log("LocationDetailsPage: Invalid data structure or no posts");
         setPosts([]);
         console.error("API returned unexpected data structure:", data);
       }
     } catch (error) {
-      console.error("Error fetching posts:", error);
+      console.error("LocationDetailsPage: Error fetching posts:", error);
       setPosts([]);
     } finally {
       setIsLoading(false);
@@ -290,7 +335,7 @@ const LocationDetailsPage = ({ setIsMasterAppLoading }) => {
     isLoading: isHistoryLoading,
     error: historyError,
   } = useLocationHistory(
-    locationInfo?.state || locationInfo?.country || locationInfo?.city,
+    locationInfo?.state || locationInfo?.country || locationInfo?.city
   );
 
   const bgColor = useColorModeValue("white", "gray.800");

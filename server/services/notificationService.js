@@ -5,7 +5,6 @@ const User = require("../models/User");
 const createNotificationsForFavoriteLocation = async (post, io) => {
   try {
     // Find users who have this location in their favorites
-    // We'll match based on stateName for now, but could be enhanced to match city/country too
     const usersWithFavoriteLocation = await User.find({
       "favorites.state": { $regex: new RegExp(post.stateName, "i") },
     });
@@ -52,7 +51,7 @@ const createNotificationsForFavoriteLocation = async (post, io) => {
         } catch (emitError) {
           console.error(
             `Error emitting notification to user ${user._id}:`,
-            emitError,
+            emitError
           );
         }
       }
@@ -67,7 +66,7 @@ const createNotificationsForFavoriteLocation = async (post, io) => {
     const validNotifications = notifications.filter((n) => n !== null);
 
     console.log(
-      `Created ${validNotifications.length} notifications for new post in ${post.stateName}`,
+      `Created ${validNotifications.length} notifications for new post in ${post.stateName}`
     );
 
     return validNotifications;
@@ -81,7 +80,7 @@ const createNotificationsForFavoriteLocation = async (post, io) => {
 const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
   try {
     // Find users who have this location in their favorites
-    // Match by state name, and optionally by city/country if available
+    // Match by state name
     const query = {
       $or: [
         { "favorites.state": { $regex: new RegExp(post.stateName, "i") } },
@@ -111,7 +110,7 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
           (fav.displayName &&
             fav.displayName
               .toLowerCase()
-              .includes(post.stateName.toLowerCase())),
+              .includes(post.stateName.toLowerCase()))
       );
 
       if (!matchingFavorite) {
@@ -161,7 +160,7 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
         } catch (emitError) {
           console.error(
             `Error emitting notification to user ${user._id}:`,
-            emitError,
+            emitError
           );
         }
       }
@@ -176,7 +175,7 @@ const createNotificationsForFavoriteLocationEnhanced = async (post, io) => {
     const validNotifications = notifications.filter((n) => n !== null);
 
     console.log(
-      `Created ${validNotifications.length} notifications for new post in ${post.stateName}`,
+      `Created ${validNotifications.length} notifications for new post in ${post.stateName}`
     );
 
     return validNotifications;

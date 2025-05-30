@@ -472,14 +472,29 @@ const MasterGlobeView = (props) => {
   const handleClick = (event) => {
     const { canvas } = globeDataObj.current;
 
-    // Create a synthetic event object for compatibility
-    const syntheticEvent = {
-      ...event,
-      target: canvas.node(),
-      currentTarget: canvas.node(),
-    };
+    // For touch events, we need to ensure proper event handling
+    let processedEvent = event;
 
-    addClickedMarkerToFindCountry(syntheticEvent);
+    // If this is a touch event, create a more compatible event object
+    if (event.changedTouches && event.changedTouches.length > 0) {
+      const touch = event.changedTouches[0];
+      processedEvent = {
+        ...event,
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        target: canvas.node(),
+        currentTarget: canvas.node(),
+      };
+    } else {
+      // Create a synthetic event object for compatibility
+      processedEvent = {
+        ...event,
+        target: canvas.node(),
+        currentTarget: canvas.node(),
+      };
+    }
+
+    addClickedMarkerToFindCountry(processedEvent);
   };
 
   // Enhanced zoom handler
@@ -1005,7 +1020,7 @@ const MasterGlobeView = (props) => {
       markerGroup: markerGroup,
     });
 
-    let pos = projection.invert(d3.pointer(event, svgMarker.node()));
+    let pos = projection.invert(getPointerPosition(event, svgMarker.node()));
 
     let markerID = event.subject.id;
     let markerIndex = markerArray.findIndex((item) => {
@@ -1581,9 +1596,12 @@ const MasterGlobeView = (props) => {
     let selectedCountryCode = null;
     let selectedPlaceCoordinate = null;
     let isPlaceVisible = false;
-    let pos = projection.invert(d3.pointer(event, canvas.node()));
+    let pointerPos = getPointerPosition(event, canvas.node());
+    let pos = projection.invert(pointerPos);
 
-    // console.log("pos: ", pos);
+    // Ensure consistent coordinate precision
+    const latitude = parseFloat(pos[1].toFixed(8));
+    const longitude = parseFloat(pos[0].toFixed(8));
 
     if (!lodash.isNil(country)) {
       selectedCountryCode = country?.id;
@@ -1591,8 +1609,8 @@ const MasterGlobeView = (props) => {
     }
 
     selectedPlaceCoordinate = {
-      latitude: `${pos[1].toFixed(8)}`,
-      longitude: `${pos[0].toFixed(8)}`,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
     };
 
     // Add this navigation
@@ -1770,7 +1788,7 @@ const MasterGlobeView = (props) => {
 
     let { projection } = elementRefObj.current;
 
-    let pos = projection.invert(d3.pointer(event, canvas.node()));
+    let pos = projection.invert(getPointerPosition(event, canvas.node()));
     // console.log("pos: ", pos)
 
     return countries?.features.find((f) => {
